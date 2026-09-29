@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 
 const MOCK_NOTIFICATIONS = [
@@ -9,7 +10,8 @@ const MOCK_NOTIFICATIONS = [
   { id: 4, type: 'price_drop', title: "Narx pasaydi", desc: "Sevimlilardagi 'Ichan Qal'a' turiga 15% chegirma.", time: "3 kun oldin", read: true },
 ];
 
-export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
+export default function Header({ onLoginClick }) {
+  const navigate = useNavigate();
   const { language, setLanguage, currency, setCurrency, user, setUser } = useAppContext();
   const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
@@ -38,7 +40,7 @@ export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Logo */}
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); onLogoClick && onLogoClick(); }}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); navigate('/'); }}>
           <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-10 w-10 object-contain rounded-md" />
           <span className="text-2xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
         </div>
@@ -46,19 +48,19 @@ export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
         {/* Right side navigation */}
         <div className="flex items-center gap-4 sm:gap-6">
           
-          <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('seo'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
+          <button onClick={() => { closeAllPopovers(); navigate('/seo/samarqand'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
             SEO Sahifa
           </button>
           
-          <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('partners'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
+          <button onClick={() => { closeAllPopovers(); navigate('/partners'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
             Hamkorlarga
           </button>
           
-          <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('status'); }} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hidden lg:block">
+          <button onClick={() => { closeAllPopovers(); navigate('/status'); }} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hidden lg:block">
             B2B / Statuslar
           </button>
 
-          <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('favorites'); }} className="text-neutral-500 hover:text-red-500 transition-colors hidden sm:block">
+          <button onClick={() => { closeAllPopovers(); navigate('/favorites'); }} className="text-neutral-500 hover:text-red-500 transition-colors hidden sm:block">
             <Heart className="h-5 w-5" />
           </button>
 
@@ -169,22 +171,22 @@ export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
                     <p className="text-xs text-neutral-500 truncate mt-0.5">{user.phone || user.email}</p>
                   </div>
                   <div className="py-1">
-                    <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('profile'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm font-bold text-neutral-900 hover:bg-neutral-50 border-b border-neutral-100 mb-1">
+                    <button onClick={() => { closeAllPopovers(); navigate('/profile'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm font-bold text-neutral-900 hover:bg-neutral-50 border-b border-neutral-100 mb-1">
                       Mening profilim
                     </button>
-                    <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('mytrips'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
+                    <button onClick={() => { closeAllPopovers(); navigate('/my-trips'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
                       Mening safarlarim
                     </button>
-                    <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('chat'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
+                    <button onClick={() => { closeAllPopovers(); navigate('/chat'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
                       Xabarlar (Chat)
                     </button>
-                    <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('custom'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
+                    <button onClick={() => { closeAllPopovers(); navigate('/custom-tour'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
                       Men uchun tur
                     </button>
-                    <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('support'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
+                    <button onClick={() => { closeAllPopovers(); navigate('/support'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
                       Qo'llab-quvvatlash
                     </button>
-                    <button onClick={() => { setUser(null); setProfileOpen(false); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-neutral-100 mt-1">
+                    <button onClick={() => { setUser(null); setProfileOpen(false); navigate('/'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-neutral-100 mt-1">
                       <LogOut className="h-4 w-4" /> Chiqish
                     </button>
                   </div>

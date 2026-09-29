@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Lock, Clock, CreditCard, FileText, ArrowRight, ShieldCheck, Ticket } from 'lucide-react';
 
 const BASE_PRICE = 450000;
 const CHILD_PRICE = 300000;
 
-export default function CheckoutPage({ onBack }) {
+export default function CheckoutPage() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes in seconds
 
@@ -83,7 +85,7 @@ export default function CheckoutPage({ onBack }) {
       {/* Top Bar with Timer */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <button onClick={onBack} className="text-sm font-medium text-neutral-500 hover:text-neutral-900 mb-2 block">
+          <button onClick={() => navigate(-1)} className="text-sm font-medium text-neutral-500 hover:text-neutral-900 mb-2 block">
             &larr; Turga qaytish
           </button>
           <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Bronni rasmiylashtirish</h1>

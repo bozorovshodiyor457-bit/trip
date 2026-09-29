@@ -283,11 +283,18 @@ export default function MyTripsPage() {
                     <div>
                       <h4 className="font-bold text-red-900 text-sm">Bekor qilish siyosati</h4>
                       <p className="text-xs text-red-700 mt-1 leading-relaxed">
-                        Siz safargacha 48 soatdan ko'proq vaqt qolganida bekor qilyapsiz. Sizga jami to'langan summaning <b className="text-red-900">{activeManage.refundPolicy}</b> qismi ({activeManage.price.toLocaleString()} so'm) kartangizga qaytariladi.
+                        Siz safargacha 48 soatdan ko'proq vaqt qolganida bekor qilyapsiz. Qaytarish siyosati: <b className="text-red-900">{activeManage.refundPolicy}</b>
                       </p>
                     </div>
                   </div>
                   
+                  <div className="flex justify-between items-center bg-white border border-neutral-200 rounded-xl p-4 mb-6 shadow-sm">
+                    <span className="text-sm font-semibold text-neutral-700">Qaytariladigan summa:</span>
+                    <span className="text-xl font-black text-emerald-600">
+                      {(activeManage.price * (parseFloat(activeManage.refundPolicy) || 0) / 100).toLocaleString()} so'm
+                    </span>
+                  </div>
+
                   <label className="block mb-4">
                     <span className="block text-sm font-semibold text-neutral-700 mb-2">Bekor qilish sababi (Ixtiyoriy)</span>
                     <textarea 

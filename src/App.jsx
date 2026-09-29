@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
 import SearchBar from './components/SearchBar';
@@ -70,7 +71,7 @@ const MOCK_TOURS = [
 function AppContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [activeCollection, setActiveCollection] = useState('popular');
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'search' | 'details' | 'favorites' | 'checkout' | 'mytrips' | 'chat' | 'custom' | 'support' | 'profile' | 'seo' | 'partners'
+  const navigate = useNavigate();
 
   const filteredTours = MOCK_TOURS.filter(t => t.collectionId === activeCollection) || [];
   const displayTours = filteredTours.length > 0 ? filteredTours : MOCK_TOURS;
@@ -79,12 +80,11 @@ function AppContent() {
     <div className="min-h-screen flex flex-col font-sans">
       <Header 
         onLoginClick={() => setIsAuthModalOpen(true)} 
-        onLogoClick={() => setCurrentView('home')}
-        onNavClick={(route) => setCurrentView(route)}
       />
       
       <main className="flex-1">
-        {currentView === 'home' && (
+        <Routes>
+          <Route path="/" element={
           <>
             {/* Hero Section */}
             <section className="relative px-4 pt-20 pb-28 sm:px-6 lg:px-8 bg-neutral-50/50">
@@ -96,8 +96,7 @@ function AppContent() {
                   Visitca Trip — O'zbekiston bo'ylab eng yaxshi turlar, mehmonxonalar va sarguzashtlarni topish va band qilish uchun ishonchli hamrohingiz.
                 </p>
                 
-                {/* When Search is clicked in SearchBar, we can mock navigation */}
-                <div onClick={() => setCurrentView('search')}>
+                <div onClick={() => navigate('/search')}>
                   <SearchBar />
                 </div>
                 
@@ -127,27 +126,27 @@ function AppContent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {displayTours.map((tour) => (
-                  <div key={tour.id} onClick={() => setCurrentView('details')}>
+                  <div key={tour.id} onClick={() => navigate('/tour/1')}>
                     <TourCard tour={tour} />
                   </div>
                 ))}
               </div>
             </section>
-          </>
-        )}
-        
-        {currentView === 'search' && <SearchPage />}
-        {currentView === 'details' && <TourDetailsPage onBookClick={() => setCurrentView('checkout')} />}
-        {currentView === 'favorites' && <FavoritesPage />}
-        {currentView === 'checkout' && <CheckoutPage onBack={() => setCurrentView('details')} />}
-        {currentView === 'mytrips' && <MyTripsPage />}
-        {currentView === 'chat' && <ChatPage />}
-        {currentView === 'custom' && <CustomTourPage />}
-        {currentView === 'support' && <SupportPage />}
-        {currentView === 'profile' && <ProfilePage />}
-        {currentView === 'seo' && <SeoDestinationPage />}
-        {currentView === 'partners' && <PartnersPage />}
-        {currentView === 'status' && <BookingStatusPage />}
+          } />
+          
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/tour/:id" element={<TourDetailsPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/my-trips" element={<MyTripsPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/custom-tour" element={<CustomTourPage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/seo/:city" element={<SeoDestinationPage />} />
+          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/status" element={<BookingStatusPage />} />
+        </Routes>
       </main>
 
       {/* Footer Placeholder */}

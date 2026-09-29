@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, MapPin, Clock, Globe, Check, X, ShieldCheck, Heart, Share, Calendar, Users, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const MOCK_TOUR = {
@@ -42,7 +43,8 @@ const MOCK_TOUR = {
   }
 };
 
-export default function TourDetailsPage({ onBookClick }) {
+export default function TourDetailsPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('group'); // group, individual
   const [openDay, setOpenDay] = useState(0);
 
@@ -256,7 +258,7 @@ export default function TourDetailsPage({ onBookClick }) {
             </div>
 
             <button 
-              onClick={onBookClick}
+              onClick={() => navigate('/checkout')}
               className="w-full bg-emerald-600 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md mb-3"
             >
               Bron qilish

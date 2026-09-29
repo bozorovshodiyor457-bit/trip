@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Smartphone, Mail } from 'lucide-react';
+import { X, Smartphone, Mail, ShieldCheck } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 
 export default function AuthModal({ isOpen, onClose }) {
@@ -62,7 +62,12 @@ export default function AuthModal({ isOpen, onClose }) {
 
   const handleVerify = (e) => {
     e.preventDefault();
-    setUser({ name: 'Shodiyor', phone: `+998 ${phone}`, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d' });
+    setStep(3); // Go to OneID step
+  };
+
+  const handleOneIDVerify = () => {
+    // Mock OneID verification
+    setUser({ name: 'Shodiyor', phone: `+998 ${phone}`, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d', isVerified: true });
     onClose();
     setStep(1);
   };
@@ -152,6 +157,34 @@ export default function AuthModal({ isOpen, onClose }) {
                   </p>
                 </div>
               </form>
+            ) : (
+              <div className="space-y-6 text-center">
+                <div className="mx-auto h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                  <ShieldCheck className="h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-900">Shaxsni tasdiqlash</h3>
+                <p className="text-sm text-neutral-500">
+                  O'zbekiston qonunchiligiga muvofiq, xavfsizlikni ta'minlash va elektron vaucher rasmiylashtirish uchun OneID (Yagona identifikatsiya tizimi) orqali shaxsingizni tasdiqlashingiz so'raladi.
+                </p>
+                
+                <button
+                  onClick={handleOneIDVerify}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-purple-700 transition-colors mt-4"
+                >
+                  OneID orqali tasdiqlash
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setUser({ name: 'Shodiyor', phone: `+998 ${phone}`, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d', isVerified: false });
+                    onClose();
+                    setStep(1);
+                  }}
+                  className="text-sm font-semibold text-neutral-500 hover:text-neutral-900 underline mt-4 inline-block"
+                >
+                  Keyinroq tasdiqlash
+                </button>
+              </div>
             )}
           </div>
         ) : (
