@@ -22,12 +22,12 @@ export default function SearchBar() {
   }, []);
 
   return (
-    <div className="relative mx-auto max-w-4xl" ref={searchBarRef}>
-      <div className="flex items-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl transition-shadow">
+    <div className="relative mx-auto max-w-4xl w-full px-2 sm:px-0" ref={searchBarRef}>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center rounded-3xl sm:rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl transition-shadow sm:divide-x divide-y sm:divide-y-0 divide-neutral-200 dark:divide-neutral-700 w-full overflow-hidden sm:overflow-visible relative">
         
         {/* Where to? */}
         <div 
-          className={`relative flex-1 rounded-full px-6 py-3 cursor-pointer transition-colors ${activeInput === 'location' ? 'bg-neutral-100 dark:bg-neutral-700 shadow-inner' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
+          className={`relative flex-1 px-6 py-4 sm:py-3 cursor-pointer transition-colors ${activeInput === 'location' ? 'bg-neutral-100 dark:bg-neutral-700 sm:rounded-l-full' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 sm:rounded-l-full'}`}
           onClick={() => setActiveInput('location')}
         >
           <label className="block text-[11px] font-bold text-neutral-900 dark:text-white cursor-pointer">Qayerga?</label>
@@ -40,7 +40,7 @@ export default function SearchBar() {
             readOnly
           />
           {activeInput === 'location' && (
-            <div className="absolute left-0 top-full mt-4 w-80 rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-xl border border-neutral-100 dark:border-neutral-700 z-50">
+            <div className="absolute left-0 top-full sm:top-full mt-2 sm:mt-4 w-full sm:w-80 rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-xl border border-neutral-100 dark:border-neutral-700 z-50">
               <h4 className="text-xs font-bold text-neutral-900 dark:text-white mb-3 px-2">Mashhur yo'nalishlar</h4>
               <ul className="space-y-1">
                 {destinations.map((dest) => (
@@ -53,10 +53,10 @@ export default function SearchBar() {
                       }}
                       className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-200 dark:bg-neutral-700">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-200 dark:bg-neutral-700 flex-shrink-0">
                         <MapPin className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                       </div>
-                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">{dest}</span>
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 truncate">{dest}</span>
                     </button>
                   </li>
                 ))}
@@ -64,12 +64,10 @@ export default function SearchBar() {
             </div>
           )}
         </div>
-        
-        <div className="h-10 w-px bg-neutral-200 dark:bg-neutral-700"></div>
 
         {/* When? */}
         <div 
-          className={`relative flex-1 rounded-full px-6 py-3 cursor-pointer transition-colors ${activeInput === 'date' ? 'bg-neutral-100 dark:bg-neutral-700 shadow-inner' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
+          className={`relative flex-1 px-6 py-4 sm:py-3 cursor-pointer transition-colors ${activeInput === 'date' ? 'bg-neutral-100 dark:bg-neutral-700' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
           onClick={() => setActiveInput('date')}
         >
           <label className="block text-[11px] font-bold text-neutral-900 dark:text-white cursor-pointer">Qachon?</label>
@@ -82,21 +80,19 @@ export default function SearchBar() {
           />
         </div>
 
-        <div className="h-10 w-px bg-neutral-200 dark:bg-neutral-700"></div>
-
         {/* Who? */}
         <div 
-          className={`relative flex-1 rounded-full pl-6 pr-2 py-2 cursor-pointer transition-colors flex items-center justify-between ${activeInput === 'guests' ? 'bg-neutral-100 dark:bg-neutral-700 shadow-inner' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
+          className={`relative flex-1 pl-6 pr-2 py-2 cursor-pointer transition-colors flex flex-row items-center justify-between ${activeInput === 'guests' ? 'bg-neutral-100 dark:bg-neutral-700 sm:rounded-r-full' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 sm:rounded-r-full'}`}
           onClick={() => setActiveInput('guests')}
         >
-          <div>
+          <div className="py-2 sm:py-0">
             <label className="block text-[11px] font-bold text-neutral-900 dark:text-white cursor-pointer">Kimlar?</label>
             <span className="block text-sm text-neutral-600 dark:text-neutral-300 truncate">
               {adults + children > 0 ? `${adults + children} mehmon` : 'Mehmonlar soni'}
             </span>
           </div>
 
-          <button className="ml-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md hover:bg-emerald-700 transition-colors flex-shrink-0">
+          <button className="ml-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md hover:bg-emerald-700 transition-colors flex-shrink-0" onClick={(e) => { e.stopPropagation(); /* Perform search */ }}>
              <Search className="h-5 w-5" />
           </button>
 

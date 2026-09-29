@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart } from 'lucide-react';
+import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { useTranslation } from '../utils/i18n';
@@ -19,6 +19,7 @@ export default function Header({ onLoginClick }) {
   const [currOpen, setCurrOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -39,16 +40,23 @@ export default function Header({ onLoginClick }) {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 relative">
         
-        {/* Logo */}
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); navigate('/'); }}>
-          <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-10 w-10 object-contain rounded-md" />
-          <span className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Visitca Trip</span>
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Toggle */}
+          <button onClick={() => setMobileMenuOpen(true)} className="md:hidden text-neutral-900 dark:text-white p-1 -ml-1">
+            <Menu className="h-6 w-6" />
+          </button>
+
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); navigate('/'); }}>
+            <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-md" />
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Visitca Trip</span>
+          </div>
         </div>
 
         {/* Right side navigation */}
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           
           <button onClick={() => { closeAllPopovers(); navigate('/seo/samarqand'); }} className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hidden md:block transition-colors">
             {t('seoPage')}
@@ -207,6 +215,58 @@ export default function Header({ onLoginClick }) {
 
         </div>
       </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)}></div>
+          <div className="relative flex w-full max-w-xs flex-col bg-white dark:bg-neutral-900 shadow-xl overflow-y-auto">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-neutral-200 dark:border-neutral-800">
+              <span className="text-xl font-bold text-neutral-900 dark:text-white">Menyu</span>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex gap-4">
+              <div className="flex-1">
+                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">Til</label>
+                <div className="flex flex-wrap gap-2">
+                  {languages.map(l => (
+                    <button key={l} onClick={() => setLanguage(l)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${l === language ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'}`}>{l}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex gap-4">
+              <div className="flex-1">
+                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">Valyuta</label>
+                <div className="flex flex-wrap gap-2">
+                  {currencies.map(c => (
+                    <button key={c} onClick={() => setCurrency(c)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${c === currency ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'}`}>{c}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-2 space-y-1 mt-2">
+              <button onClick={() => { setMobileMenuOpen(false); navigate('/seo/samarqand'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
+                {t('seoPage')}
+              </button>
+              <button onClick={() => { setMobileMenuOpen(false); navigate('/partners'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
+                {t('partners')}
+              </button>
+              <button onClick={() => { setMobileMenuOpen(false); navigate('/status'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
+                {t('b2bStatus')}
+              </button>
+              <button onClick={() => { setMobileMenuOpen(false); navigate('/favorites'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
+                Sevimlilar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
