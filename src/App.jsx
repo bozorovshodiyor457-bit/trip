@@ -104,9 +104,6 @@ function AppContent() {
                   <SearchBar />
                 </div>
                 
-                <p className="mt-6 text-sm text-neutral-400">
-                  {t('searchHint')}
-                </p>
               </div>
             </section>
 
