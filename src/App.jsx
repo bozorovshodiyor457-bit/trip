@@ -132,6 +132,7 @@ function AppContent() {
                 ))}
               </div>
             </section>
+          </>
           } />
           
           <Route path="/search" element={<SearchPage />} />
