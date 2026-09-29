@@ -8,7 +8,6 @@ export const AppProvider = ({ children }) => {
   const [language, setLanguage] = useState('UZ'); // 'UZ', 'RU', 'EN'
   const [currency, setCurrency] = useState('UZS'); // 'UZS', 'USD'
   const [user, setUser] = useState(null); // null if not logged in
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto'); // 'light', 'dark', 'auto'
 
   useEffect(() => {
     const checkTimeAndApplyTheme = () => {
@@ -18,18 +17,8 @@ export const AppProvider = ({ children }) => {
       const tashkentTime = new Date(utc + (3600000 * 5));
       const hours = tashkentTime.getHours();
       
-      let isDark = false;
-      
-      if (theme === 'auto') {
-        // Light mode between 07:01 and 16:59
-        if (hours >= 7 && hours < 17) {
-          isDark = false;
-        } else {
-          isDark = true;
-        }
-      } else {
-        isDark = theme === 'dark';
-      }
+      // Light mode between 07:01 (approx 7) and 18:59 (approx < 19)
+      const isDark = (hours < 7 || hours >= 19);
 
       if (isDark) {
         document.documentElement.classList.add('dark');
@@ -42,12 +31,7 @@ export const AppProvider = ({ children }) => {
     // Check every minute
     const interval = setInterval(checkTimeAndApplyTheme, 60000);
     return () => clearInterval(interval);
-  }, [theme]);
-
-  const changeTheme = (newTheme) => {
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-  };
+  }, []);
 
   const value = {
     language,
@@ -56,8 +40,6 @@ export const AppProvider = ({ children }) => {
     setCurrency,
     user,
     setUser,
-    theme,
-    changeTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

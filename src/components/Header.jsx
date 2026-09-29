@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart, Sun, Moon } from 'lucide-react';
+import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { useTranslation } from '../utils/i18n';
@@ -13,7 +13,7 @@ const MOCK_NOTIFICATIONS = [
 
 export default function Header({ onLoginClick }) {
   const navigate = useNavigate();
-  const { language, setLanguage, currency, setCurrency, user, setUser, theme, changeTheme } = useAppContext();
+  const { language, setLanguage, currency, setCurrency, user, setUser } = useAppContext();
   const t = useTranslation(language);
   const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
@@ -64,15 +64,6 @@ export default function Header({ onLoginClick }) {
 
           <button onClick={() => { closeAllPopovers(); navigate('/favorites'); }} className="text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-500 transition-colors hidden sm:block">
             <Heart className="h-5 w-5" />
-          </button>
-          
-          {/* Theme Toggle */}
-          <button 
-            onClick={() => changeTheme(theme === 'dark' ? 'light' : 'dark')} 
-            className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            title="Mavzuni o'zgartirish"
-          >
-            {document.documentElement.classList.contains('dark') ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
 
           {/* Notifications */}
