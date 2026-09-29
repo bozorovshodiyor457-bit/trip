@@ -70,38 +70,38 @@ export default function Header({ onLoginClick }) {
           <div className="relative">
             <button 
               onClick={() => { const state = notifOpen; closeAllPopovers(); setNotifOpen(!state); }}
-              className="text-neutral-500 hover:text-neutral-900 transition-colors relative mt-1"
+              className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors relative mt-1"
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white border-2 border-white">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white border-2 border-white dark:border-neutral-900">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {notifOpen && (
-              <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-full sm:left-auto sm:right-0 mt-3 sm:w-96 origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden z-50">
-                <div className="px-4 py-3 border-b border-neutral-100 flex justify-between items-center bg-neutral-50">
-                  <h3 className="text-sm font-bold text-neutral-900">{t('notifications')}</h3>
+              <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-full sm:left-auto sm:right-0 mt-3 sm:w-96 origin-top-right rounded-2xl bg-white dark:bg-neutral-800 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none overflow-hidden z-50">
+                <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center bg-neutral-50 dark:bg-neutral-900/50">
+                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white">{t('notifications')}</h3>
                   {unreadCount > 0 && (
-                    <button onClick={markAllRead} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                    <button onClick={markAllRead} className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
                       {t('markAllRead')}
                     </button>
                   )}
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-neutral-500">{t('noNotif')}</div>
+                    <div className="p-6 text-center text-sm text-neutral-500 dark:text-neutral-400">{t('noNotif')}</div>
                   ) : (
-                    <div className="divide-y divide-neutral-100">
+                    <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
                       {notifications.map(notif => (
-                        <div key={notif.id} className={`p-4 flex gap-3 hover:bg-neutral-50 transition-colors cursor-pointer ${notif.read ? 'opacity-70' : 'bg-blue-50/30'}`}>
-                          <div className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${notif.read ? 'bg-transparent' : 'bg-blue-500'}`}></div>
+                        <div key={notif.id} className={`p-4 flex gap-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer ${notif.read ? 'opacity-70' : 'bg-blue-50/30 dark:bg-blue-900/20'}`}>
+                          <div className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${notif.read ? 'bg-transparent' : 'bg-blue-500 dark:bg-blue-400'}`}></div>
                           <div>
-                            <p className="text-sm font-semibold text-neutral-900 mb-0.5">{notif.title}</p>
-                            <p className="text-xs text-neutral-600 leading-snug">{notif.desc}</p>
-                            <p className="text-[10px] text-neutral-400 mt-2">{notif.time}</p>
+                            <p className="text-sm font-semibold text-neutral-900 dark:text-white mb-0.5">{notif.title}</p>
+                            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-snug">{notif.desc}</p>
+                            <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-2">{notif.time}</p>
                           </div>
                         </div>
                       ))}
@@ -112,22 +112,22 @@ export default function Header({ onLoginClick }) {
             )}
           </div>
 
-          <div className="hidden h-5 w-px bg-neutral-200 sm:block"></div>
+          <div className="hidden h-5 w-px bg-neutral-200 dark:bg-neutral-700 sm:block"></div>
 
           {/* Language Selector */}
           <div className="relative hidden sm:block">
             <button
               onClick={() => { const state = langOpen; closeAllPopovers(); setLangOpen(!state); }}
-              className="flex items-center gap-1 text-sm font-medium text-neutral-700 hover:text-emerald-600 transition-colors"
+              className="flex items-center gap-1 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             >
               <span>{language}</span>
               <ChevronDown className="h-3 w-3" />
             </button>
             {langOpen && (
-              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-md bg-white dark:bg-neutral-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50">
                 <div className="py-1">
                   {languages.map((l) => (
-                    <button key={l} onClick={() => { setLanguage(l); setLangOpen(false); }} className={`block w-full px-4 py-2 text-left text-sm ${l === language ? 'bg-emerald-50 text-emerald-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>{l}</button>
+                    <button key={l} onClick={() => { setLanguage(l); setLangOpen(false); }} className={`block w-full px-4 py-2 text-left text-sm ${l === language ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}>{l}</button>
                   ))}
                 </div>
               </div>
@@ -138,16 +138,16 @@ export default function Header({ onLoginClick }) {
           <div className="relative hidden sm:block">
             <button
               onClick={() => { const state = currOpen; closeAllPopovers(); setCurrOpen(!state); }}
-              className="flex items-center gap-1 text-sm font-medium text-neutral-700 hover:text-emerald-600 transition-colors"
+              className="flex items-center gap-1 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             >
               <span>{currency}</span>
               <ChevronDown className="h-3 w-3" />
             </button>
             {currOpen && (
-              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-md bg-white dark:bg-neutral-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50">
                 <div className="py-1">
                   {currencies.map((c) => (
-                    <button key={c} onClick={() => { setCurrency(c); setCurrOpen(false); }} className={`block w-full px-4 py-2 text-left text-sm ${c === currency ? 'bg-emerald-50 text-emerald-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>{c}</button>
+                    <button key={c} onClick={() => { setCurrency(c); setCurrOpen(false); }} className={`block w-full px-4 py-2 text-left text-sm ${c === currency ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}>{c}</button>
                   ))}
                 </div>
               </div>
@@ -159,11 +159,11 @@ export default function Header({ onLoginClick }) {
             <div className="relative">
               <button
                 onClick={() => { const state = profileOpen; closeAllPopovers(); setProfileOpen(!state); }}
-                className="flex items-center gap-2 rounded-full border border-neutral-200 p-1 pr-3 hover:shadow-md transition-shadow"
+                className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
               >
                 <img src={user.avatar} alt="User avatar" className="h-7 w-7 rounded-full object-cover" />
-                <span className="text-sm font-medium text-neutral-700 hidden lg:block">{user.name}</span>
-                <ChevronDown className="h-4 w-4 text-neutral-400" />
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden lg:block">{user.name}</span>
+                <ChevronDown className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
               </button>
               
               {profileOpen && (

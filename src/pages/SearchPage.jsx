@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Map, List, SlidersHorizontal, ChevronDown, Check, Star, ShieldCheck, MapPin, Clock } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
+import { useTranslation } from '../utils/i18n';
 
 // Mock Tours for Search Page
 const MOCK_TOURS = [
@@ -97,7 +98,8 @@ const MOCK_TOURS = [
 ];
 
 export default function SearchPage() {
-  const { currency } = useAppContext();
+  const { currency, language } = useAppContext();
+  const t = useTranslation(language);
   const [showMap, setShowMap] = useState(false);
   const [hoveredTourId, setHoveredTourId] = useState(null);
 
@@ -166,9 +168,9 @@ export default function SearchPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-neutral-200">
-        <h1 className="text-2xl font-bold text-neutral-900">
-          O'zbekiston bo'ylab {filteredTours.length} ta tur topildi
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+          {t('toursFound', { count: filteredTours.length })}
         </h1>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Sort Dropdown mock */}
@@ -176,22 +178,22 @@ export default function SearchPage() {
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-neutral-300 bg-white py-2 pl-4 pr-10 text-sm font-medium text-neutral-700 shadow-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              className="w-full appearance-none rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 py-2 pl-4 pr-10 text-sm font-medium text-neutral-700 dark:text-neutral-300 shadow-sm outline-none focus:border-neutral-900 dark:focus:border-neutral-500 focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-500"
             >
-              <option value="popularity">Mashhurlik bo'yicha</option>
-              <option value="price_asc">Narx (Arzonroq)</option>
-              <option value="price_desc">Narx (Qimmatroq)</option>
-              <option value="rating">Reyting bo'yicha</option>
+              <option value="popularity">{t('sortByPop')}</option>
+              <option value="price_asc">{t('sortPriceAsc')}</option>
+              <option value="price_desc">{t('sortPriceDesc')}</option>
+              <option value="rating">{t('sortRating')}</option>
             </select>
             <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-neutral-500 pointer-events-none" />
           </div>
 
           <button 
             onClick={() => setShowMap(!showMap)}
-            className="flex items-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-neutral-900 dark:bg-white px-4 py-2 text-sm font-medium text-white dark:text-neutral-900 shadow-sm hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
           >
             {showMap ? <List className="h-4 w-4" /> : <Map className="h-4 w-4" />}
-            {showMap ? 'Ro\'yxat' : 'Xarita'}
+            {showMap ? t('list') : t('map')}
           </button>
         </div>
       </div>
@@ -201,136 +203,136 @@ export default function SearchPage() {
         {/* Filters Sidebar */}
         <aside className="w-full lg:w-64 flex-shrink-0 space-y-8">
           <div>
-            <h3 className="font-semibold text-neutral-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4" />
-              Filtrlar
+              {t('filters')}
             </h3>
             
             {/* Format */}
-            <div className="border-t border-neutral-200 py-4 mt-2">
-              <h4 className="text-sm font-medium text-neutral-900 mb-3">Format</h4>
+            <div className="border-t border-neutral-200 dark:border-neutral-800 py-4 mt-2">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">{t('format')}</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.format.includes('group')}
                     onChange={() => handleCheckboxChange('format', 'group')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Guruhli tur</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('groupTour')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.format.includes('individual')}
                     onChange={() => handleCheckboxChange('format', 'individual')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Individual tur</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('individualTour')}</span>
                 </label>
               </div>
             </div>
 
             {/* Organizer Type */}
-            <div className="border-t border-neutral-200 py-4">
-              <h4 className="text-sm font-medium text-neutral-900 mb-3">Tashkilotchi</h4>
+            <div className="border-t border-neutral-200 dark:border-neutral-800 py-4">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">{t('organizer')}</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.organizerType.includes('guide')}
                     onChange={() => handleCheckboxChange('organizerType', 'guide')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Yakka tartibdagi Gid</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('guide')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.organizerType.includes('operator')}
                     onChange={() => handleCheckboxChange('organizerType', 'operator')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Turoperator</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('operator')}</span>
                 </label>
               </div>
             </div>
 
             {/* Price */}
-            <div className="border-t border-neutral-200 py-4">
-              <h4 className="text-sm font-medium text-neutral-900 mb-3">Narx (UZS)</h4>
+            <div className="border-t border-neutral-200 dark:border-neutral-800 py-4">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">{t('priceUzs')} (UZS)</h4>
               <div className="flex items-center gap-2">
                 <input 
                   type="number" 
                   placeholder="Min" 
                   value={filters.minPrice}
                   onChange={e => setFilters({...filters, minPrice: e.target.value})}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900" 
+                  className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 outline-none focus:border-neutral-900 dark:focus:border-neutral-500 focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-500" 
                 />
-                <span className="text-neutral-400">-</span>
+                <span className="text-neutral-400 dark:text-neutral-500">-</span>
                 <input 
                   type="number" 
                   placeholder="Max" 
                   value={filters.maxPrice}
                   onChange={e => setFilters({...filters, maxPrice: e.target.value})}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900" 
+                  className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 outline-none focus:border-neutral-900 dark:focus:border-neutral-500 focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-500" 
                 />
               </div>
             </div>
 
             {/* Duration */}
-            <div className="border-t border-neutral-200 py-4">
-              <h4 className="text-sm font-medium text-neutral-900 mb-3">Davomiyligi</h4>
+            <div className="border-t border-neutral-200 dark:border-neutral-800 py-4">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">{t('duration')}</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.durationType.includes('hours')}
                     onChange={() => handleCheckboxChange('durationType', 'hours')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Ekskursiya (bir necha soat)</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('hours')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.durationType.includes('1_day')}
                     onChange={() => handleCheckboxChange('durationType', '1_day')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">1 kunlik</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('oneDay')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.durationType.includes('multi_day')}
                     onChange={() => handleCheckboxChange('durationType', 'multi_day')} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Ko'p kunlik</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('multiDay')}</span>
                 </label>
               </div>
             </div>
 
             {/* Rating */}
-            <div className="border-t border-neutral-200 py-4">
-              <h4 className="text-sm font-medium text-neutral-900 mb-3">Reyting</h4>
+            <div className="border-t border-neutral-200 dark:border-neutral-800 py-4">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">{t('rating')}</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="radio" name="rating" className="accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="radio" name="rating" className="accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.rating === 4.5}
                     onChange={() => setFilters({...filters, rating: 4.5})} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900 flex items-center gap-1">4.5+ A'lo <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"/></span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white flex items-center gap-1">4.5+ {t('excellent')} <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"/></span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="radio" name="rating" className="accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="radio" name="rating" className="accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.rating === 4.0}
                     onChange={() => setFilters({...filters, rating: 4.0})} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900 flex items-center gap-1">4.0+ Yaxshi <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"/></span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white flex items-center gap-1">4.0+ {t('good')} <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"/></span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="radio" name="rating" className="accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="radio" name="rating" className="accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.rating === null}
                     onChange={() => setFilters({...filters, rating: null})} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Barchasi</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('all')}</span>
                 </label>
               </div>
             </div>
 
             {/* Extra Options */}
-            <div className="border-t border-neutral-200 py-4">
-              <h4 className="text-sm font-medium text-neutral-900 mb-3">Qo'shimcha</h4>
+            <div className="border-t border-neutral-200 dark:border-neutral-800 py-4">
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-3">{t('extra')}</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.freeCancellation}
                     onChange={(e) => setFilters({...filters, freeCancellation: e.target.checked})} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Bepul bekor qilish</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('freeCancel')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 w-4 h-4 cursor-pointer"
+                  <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:ring-neutral-900 accent-neutral-900 dark:accent-neutral-500 w-4 h-4 cursor-pointer"
                     checked={filters.transferIncluded}
                     onChange={(e) => setFilters({...filters, transferIncluded: e.target.checked})} />
-                  <span className="text-sm text-neutral-600 group-hover:text-neutral-900">Transfer / Yashash kiritilgan</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white">{t('transferInc')}</span>
                 </label>
               </div>
             </div>
@@ -344,13 +346,13 @@ export default function SearchPage() {
           {/* Tour Grid */}
           <div className={`${showMap ? 'w-1/2 overflow-y-auto pr-2 no-scrollbar' : 'w-full'}`}>
             {filteredTours.length === 0 ? (
-              <div className="text-center py-20 bg-neutral-50 rounded-xl border border-neutral-200 border-dashed">
-                <p className="text-neutral-500">Hech narsa topilmadi. Filtrni o'zgartirib ko'ring.</p>
+              <div className="text-center py-20 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-800 border-dashed">
+                <p className="text-neutral-500 dark:text-neutral-400">{t('nothingFound')}</p>
                 <button 
                   onClick={() => setFilters({format: [], organizerType: [], minPrice: '', maxPrice: '', durationType: [], rating: null, freeCancellation: false, transferIncluded: false})}
-                  className="mt-4 text-sm font-medium text-neutral-900 underline hover:text-neutral-700"
+                  className="mt-4 text-sm font-medium text-neutral-900 dark:text-white underline hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
-                  Filtrlarni tozalash
+                  {t('clearFilters')}
                 </button>
               </div>
             ) : (
@@ -358,31 +360,31 @@ export default function SearchPage() {
                 {filteredTours.map(tour => (
                   <div 
                     key={tour.id} 
-                    className="group cursor-pointer flex flex-col rounded-xl border border-neutral-200 bg-white hover:shadow-lg transition-shadow overflow-hidden"
+                    className="group cursor-pointer flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:shadow-lg transition-shadow overflow-hidden"
                     onMouseEnter={() => setHoveredTourId(tour.id)}
                     onMouseLeave={() => setHoveredTourId(null)}
                   >
-                    <div className="relative aspect-[4/3] w-full bg-neutral-200 overflow-hidden">
+                    <div className="relative aspect-[4/3] w-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
                       <img src={tour.image} alt={tour.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                       
                       {/* Top Badges */}
-                      <div className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-neutral-900 shadow-sm flex items-center gap-1">
+                      <div className="absolute top-3 right-3 rounded-full bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-neutral-900 dark:text-white shadow-sm flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                         {tour.rating}
                       </div>
 
                       {/* Bottom Badges */}
                       <div className="absolute bottom-3 left-3 flex gap-2">
-                        <div className="rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-neutral-800 uppercase tracking-wide">
-                          {tour.format === 'group' ? 'Guruhli' : 'Individual'}
+                        <div className="rounded-full bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">
+                          {tour.format === 'group' ? t('groupTour') : t('individualTour')}
                         </div>
                         {tour.organizerType === 'operator' ? (
-                           <div className="rounded-full bg-blue-50/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-blue-700 uppercase tracking-wide border border-blue-200">
-                             Turoperator
+                           <div className="rounded-full bg-blue-50/90 dark:bg-blue-900/80 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide border border-blue-200 dark:border-blue-800">
+                             {t('operator')}
                            </div>
                         ) : (
-                           <div className="rounded-full bg-orange-50/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-orange-700 uppercase tracking-wide border border-orange-200">
-                             Gid
+                           <div className="rounded-full bg-orange-50/90 dark:bg-orange-900/80 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-orange-700 dark:text-orange-300 uppercase tracking-wide border border-orange-200 dark:border-orange-800">
+                             {t('guide')}
                            </div>
                         )}
                       </div>
@@ -390,7 +392,7 @@ export default function SearchPage() {
                     
                     <div className="p-4 flex flex-col flex-1">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-neutral-900 leading-tight">{tour.title}</h3>
+                        <h3 className="font-semibold text-neutral-900 dark:text-white leading-tight">{tour.title}</h3>
                         {tour.isVerified && (
                           <div title="Tasdiqlangan tashkilotchi" className="mt-0.5">
                             <ShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -398,20 +400,20 @@ export default function SearchPage() {
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-1.5 text-sm text-neutral-500 mb-3">
+                      <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 mb-3">
                         <MapPin className="h-4 w-4" />
                         <span className="truncate">{tour.location}</span>
                       </div>
                       
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 bg-neutral-100 w-fit px-2 py-1 rounded-md mb-4">
-                        <Clock className="h-3.5 w-3.5 text-neutral-500" />
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 w-fit px-2 py-1 rounded-md mb-4">
+                        <Clock className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
                         {tour.durationStr}
                       </div>
 
-                      <div className="mt-auto flex items-end justify-between border-t border-neutral-100 pt-3">
+                      <div className="mt-auto flex items-end justify-between border-t border-neutral-100 dark:border-neutral-800 pt-3">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 mb-0.5">Narxi (kishi boshiga)</span>
-                          <span className="text-lg font-bold text-neutral-900 leading-none">{displayPrice(tour.priceUZS)}</span>
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">{t('pricePerPerson')}</span>
+                          <span className="text-lg font-bold text-neutral-900 dark:text-white leading-none">{displayPrice(tour.priceUZS)}</span>
                         </div>
                       </div>
                     </div>
@@ -423,11 +425,11 @@ export default function SearchPage() {
 
           {/* Map Mockup Panel */}
           {showMap && (
-            <div className="hidden lg:block w-1/2 h-full rounded-2xl bg-neutral-100 border border-neutral-200 overflow-hidden relative sticky top-24 shadow-inner">
+            <div className="hidden lg:block w-1/2 h-full rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 overflow-hidden relative sticky top-24 shadow-inner">
               {/* Fake Map Background */}
-              <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/6/41/24.png')] bg-cover bg-center opacity-40 mix-blend-multiply" style={{ backgroundSize: '200%' }}></div>
+              <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/6/41/24.png')] bg-cover bg-center opacity-40 mix-blend-multiply dark:mix-blend-screen dark:opacity-30" style={{ backgroundSize: '200%' }}></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                 <span className="text-neutral-400 font-medium text-lg uppercase tracking-widest bg-white/70 px-4 py-2 rounded-lg backdrop-blur-sm">Interaktiv Xarita</span>
+                 <span className="text-neutral-400 dark:text-neutral-500 font-medium text-lg uppercase tracking-widest bg-white/70 dark:bg-neutral-900/70 px-4 py-2 rounded-lg backdrop-blur-sm">{t('interactiveMap')}</span>
               </div>
               
               {/* Map Pins */}
@@ -446,13 +448,13 @@ export default function SearchPage() {
                     <div className={`
                       px-3 py-1.5 rounded-full font-bold text-sm shadow-md transition-all
                       ${isHovered 
-                        ? 'bg-neutral-900 text-white scale-110 z-10' 
-                        : 'bg-white text-neutral-900 hover:bg-neutral-900 hover:text-white'}
+                        ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 scale-110 z-10' 
+                        : 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white hover:bg-neutral-900 dark:hover:bg-white hover:text-white dark:hover:text-neutral-900'}
                     `}>
                       {displayPrice(tour.priceUZS)}
                     </div>
                     {/* Pin tail */}
-                    <div className={`w-3 h-3 rotate-45 -mt-1.5 ${isHovered ? 'bg-neutral-900' : 'bg-white group-hover:bg-neutral-900'}`}></div>
+                    <div className={`w-3 h-3 rotate-45 -mt-1.5 ${isHovered ? 'bg-neutral-900 dark:bg-white' : 'bg-white dark:bg-neutral-900 group-hover:bg-neutral-900 dark:group-hover:bg-white'}`}></div>
                   </div>
                 )
               })}

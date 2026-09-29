@@ -119,8 +119,8 @@ function AppContent() {
                     onClick={() => setActiveCollection(collection.id)}
                     className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
                       activeCollection === collection.id 
-                        ? 'bg-neutral-900 text-white shadow-md' 
-                        : 'bg-white border border-neutral-200 text-neutral-700 hover:border-neutral-900'
+                        ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-md' 
+                        : 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-neutral-900 dark:hover:border-white'
                     }`}
                   >
                     {collection.title}
