@@ -39,7 +39,7 @@ export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
         
         {/* Logo */}
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); onLogoClick && onLogoClick(); }}>
-          <img src="/logo.png" alt="Visitca Trip Logo" className="h-8 w-8 object-contain" />
+          <embed src="/Visitca_Trip_logo_final.pdf#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" className="h-8 w-8 pointer-events-none" />
           <span className="text-xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
         </div>
 
