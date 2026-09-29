@@ -81,7 +81,7 @@ function AppContent() {
   const displayTours = filteredTours.length > 0 ? filteredTours : MOCK_TOURS;
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 transition-colors">
       <Header 
         onLoginClick={() => setIsAuthModalOpen(true)} 
       />
@@ -91,12 +91,12 @@ function AppContent() {
           <Route path="/" element={
           <>
             {/* Hero Section */}
-            <section className="relative px-4 pt-20 pb-28 sm:px-6 lg:px-8 bg-neutral-50/50">
+            <section className="relative px-4 pt-20 pb-28 sm:px-6 lg:px-8 bg-neutral-50/50 dark:bg-neutral-900/50">
               <div className="mx-auto max-w-7xl text-center">
-                <h1 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl md:text-6xl mb-6">
+                <h1 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white sm:text-5xl md:text-6xl mb-6">
                   {t('heroTitle')}
                 </h1>
-                <p className="mx-auto max-w-2xl text-lg text-neutral-500 mb-12">
+                <p className="mx-auto max-w-2xl text-lg text-neutral-500 dark:text-neutral-400 mb-12">
                   {t('heroDesc')}
                 </p>
                 
@@ -155,16 +155,16 @@ function AppContent() {
       </main>
 
       {/* Footer Placeholder */}
-      <footer className="border-t border-neutral-200 bg-neutral-50 py-12 mt-auto">
+      <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 py-12 mt-auto transition-colors">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4">
             <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-8 w-8 object-contain rounded-md" />
-            <span className="text-xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
+            <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Visitca Trip</span>
           </div>
-          <p className="text-sm text-neutral-500 max-w-md mb-6">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-md mb-6">
             {t('footerText')}
           </p>
-          <p className="text-xs text-neutral-400">{t('footerRights')}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('footerRights')}</p>
         </div>
       </footer>
 
