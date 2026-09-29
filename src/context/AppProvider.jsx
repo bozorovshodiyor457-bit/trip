@@ -10,11 +10,22 @@ export const AppProvider = ({ children }) => {
     return localStorage.getItem('language') || 'uz';
   }); 
   const [currency, setCurrency] = useState('UZS'); // 'UZS', 'USD'
-  const [user, setUser] = useState(null); // null if not logged in
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('visitca_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('visitca_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('visitca_user');
+    }
+  }, [user]);
 
   useEffect(() => {
     const checkTimeAndApplyTheme = () => {

@@ -76,14 +76,30 @@ export default function AuthModal({ isOpen, onClose }) {
 
   const handleOneIDVerify = () => {
     // Mock OneID verification
-    setUser({ name: 'Shodiyor', phone: `+998 ${phone}`, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d', isVerified: true });
+    const userData = {
+      name: 'O\'zbekiston Fuqarosi',
+      phone: `+998 ${phone}`,
+      email: null,
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80',
+      isVerified: true
+    };
+    setUser(userData);
+    localStorage.setItem('visitca_user', JSON.stringify(userData));
     onClose();
     setStep(1);
   };
 
   const handleEmailLogin = (e) => {
     e.preventDefault();
-    setUser({ name: 'John Doe', email, avatar: 'https://i.pravatar.cc/150?img=33' });
+    const resolvedName = isSignUp && fullName.trim() ? fullName.trim() : email.split('@')[0];
+    const userData = {
+      name: resolvedName,
+      email: email,
+      phone: '',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80'
+    };
+    setUser(userData);
+    localStorage.setItem('visitca_user', JSON.stringify(userData));
     onClose();
   };
 
@@ -187,7 +203,15 @@ export default function AuthModal({ isOpen, onClose }) {
                 
                 <button
                   onClick={() => {
-                    setUser({ name: 'Shodiyor', phone: `+998 ${phone}`, avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d', isVerified: false });
+                    const userData = { 
+                      name: 'O\'zbekiston Fuqarosi', 
+                      phone: `+998 ${phone}`, 
+                      email: null,
+                      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80', 
+                      isVerified: false 
+                    };
+                    setUser(userData);
+                    localStorage.setItem('visitca_user', JSON.stringify(userData));
                     onClose();
                     setStep(1);
                   }}

@@ -168,15 +168,15 @@ export default function Header({ onLoginClick }) {
                 className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
               >
                 <img src={user.avatar} alt="User avatar" className="h-7 w-7 rounded-full object-cover" />
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden lg:block">{user.name}</span>
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden lg:block">{user.name || user.email || 'Foydalanuvchi'}</span>
                 <ChevronDown className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
               </button>
               
               {profileOpen && (
                 <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-full sm:left-auto sm:right-0 mt-2 sm:w-64 origin-top-right rounded-xl bg-white dark:bg-neutral-800 shadow-xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50 overflow-hidden">
                   <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-700">
-                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{user.name}</p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">{user.phone || user.email}</p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{user.name || user.email || 'Foydalanuvchi'}</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">{user.phone || user.email || ''}</p>
                   </div>
                   <div className="py-1">
                     <button onClick={() => { closeAllPopovers(); navigate('/profile'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm font-bold text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700 border-b border-neutral-100 dark:border-neutral-700 mb-1">
@@ -194,7 +194,7 @@ export default function Header({ onLoginClick }) {
                     <button onClick={() => { closeAllPopovers(); navigate('/support'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
                       {t('nav.support')}
                     </button>
-                    <button onClick={() => { setUser(null); setProfileOpen(false); navigate('/'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-neutral-700 border-t border-neutral-100 dark:border-neutral-700 mt-1">
+                    <button onClick={() => { setUser(null); localStorage.removeItem('visitca_user'); setProfileOpen(false); navigate('/'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-neutral-700 border-t border-neutral-100 dark:border-neutral-700 mt-1">
                       <LogOut className="h-4 w-4" /> {t('nav.logout')}
                     </button>
                   </div>
