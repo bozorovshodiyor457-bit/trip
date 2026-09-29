@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Smartphone, Mail, ShieldCheck } from 'lucide-react';
+import { X, Smartphone, Mail, ShieldCheck, User } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 
 export default function AuthModal({ isOpen, onClose }) {
@@ -9,6 +9,8 @@ export default function AuthModal({ isOpen, onClose }) {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
 
   if (!isOpen) return null;
 
@@ -95,11 +97,13 @@ export default function AuthModal({ isOpen, onClose }) {
           <X className="h-5 w-5" />
         </button>
 
-        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white mb-6">Tizimga kirish</h2>
+        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white mb-6">
+          {activeTab === 'foreign' && isSignUp ? "Ro'yxatdan o'tish" : "Tizimga kirish"}
+        </h2>
 
         <div className="flex space-x-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1 mb-6">
           <button
-            onClick={() => { setActiveTab('local'); setStep(1); }}
+            onClick={() => { setActiveTab('local'); setStep(1); setIsSignUp(false); }}
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${activeTab === 'local' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}
           >
             O'zbekiston fuqarosi
@@ -197,6 +201,22 @@ export default function AuthModal({ isOpen, onClose }) {
         ) : (
           <div className="space-y-4">
              <form onSubmit={handleEmailLogin} className="space-y-4">
+                {isSignUp && (
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">To'liq ism (F.I.Sh.)</label>
+                    <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 shadow-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 flex items-center">
+                      <input
+                        type="text"
+                        className="block w-full border-0 p-0 text-neutral-900 dark:text-white bg-transparent placeholder-neutral-400 dark:placeholder-neutral-500 focus:ring-0 sm:text-sm outline-none"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                      />
+                      <User className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">E-mail manzil</label>
                   <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 shadow-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 flex items-center">
@@ -215,7 +235,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   type="submit"
                   className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
                 >
-                  Kirish
+                  {isSignUp ? "Ro'yxatdan o'tish" : "Kirish"}
                 </button>
              </form>
 
@@ -240,11 +260,30 @@ export default function AuthModal({ isOpen, onClose }) {
                 </button>
 
                 <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors">
-                  <svg className="h-5 w-5 text-neutral-900 dark:text-white" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z" />
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#2AABEE"/>
+                    <path d="M5.44198 11.5173L16.2731 7.33758C16.7761 7.15286 17.218 7.45892 17.0601 8.01633L15.176 16.8904C15.0298 17.5458 14.6374 17.708 14.0924 17.4019L11.0967 15.1951L9.65152 16.5866C9.4916 16.7465 9.35824 16.8799 9.06456 16.8799L9.2798 13.8217L14.845 8.78857C15.0872 8.57288 14.7925 8.45266 14.4715 8.66835L7.58554 13.0033L4.62241 12.076C3.97811 11.8745 3.96541 11.4326 4.75713 11.1216L5.44198 11.5173Z" fill="white"/>
                   </svg>
-                  <span className="text-sm">Apple</span>
+                  <span className="text-sm">Telegram</span>
                 </button>
+              </div>
+
+              <div className="mt-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                {isSignUp ? (
+                  <>
+                    Hisobingiz bormi?{' '}
+                    <button type="button" onClick={() => setIsSignUp(false)} className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                      Kirish
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Hisobingiz yo'qmi?{' '}
+                    <button type="button" onClick={() => setIsSignUp(true)} className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                      Ro'yxatdan o'tish
+                    </button>
+                  </>
+                )}
               </div>
           </div>
         )}
