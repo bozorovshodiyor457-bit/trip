@@ -332,7 +332,7 @@ export default function CheckoutPage() {
             <h2 className="text-lg font-bold text-neutral-900 dark:text-white mb-6">Buyurtma xulosasi</h2>
             
             <div className="flex gap-4 mb-6">
-              <img src="https://images.unsplash.com/photo-1548013146-72479768bada?w=200&q=80" alt="Tour" className="h-16 w-20 object-cover rounded-lg" />
+              <img src="https://picsum.photos/seed/tour20/800/600" alt="Tour" className="h-16 w-20 object-cover rounded-lg" />
               <div>
                 <h3 className="font-semibold text-neutral-900 dark:text-white leading-tight text-sm">Afsonaviy Samarqand bo'ylab 2 kunlik sayohat</h3>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">24 Okt - 25 Okt (Guruhli tur)</p>
