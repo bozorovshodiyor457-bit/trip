@@ -152,8 +152,8 @@ function AppContent() {
       <footer className="border-t border-neutral-200 bg-neutral-50 py-12 mt-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-6 w-6 overflow-hidden flex items-center justify-center">
-              <embed src="/Visitca_Trip_logo_final.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" className="h-full w-full pointer-events-none bg-transparent" style={{ border: 'none', outline: 'none', backgroundColor: 'transparent' }} />
+            <div className="h-6 w-6 overflow-hidden relative flex items-center justify-center rounded-sm">
+              <embed src="/Visitca_Trip_logo_final.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" className="absolute w-[120%] h-[120%] max-w-none pointer-events-none bg-white" style={{ border: 'none', outline: 'none' }} />
             </div>
             <span className="text-lg font-bold tracking-tight text-neutral-900">Visitca Trip</span>
           </div>
