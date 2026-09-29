@@ -53,6 +53,10 @@ export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
           <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('partners'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
             Hamkorlarga
           </button>
+          
+          <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('status'); }} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hidden lg:block">
+            B2B / Statuslar
+          </button>
 
           <button onClick={() => { closeAllPopovers(); onNavClick && onNavClick('favorites'); }} className="text-neutral-500 hover:text-red-500 transition-colors hidden sm:block">
             <Heart className="h-5 w-5" />

@@ -14,6 +14,7 @@ import SupportPage from './pages/SupportPage';
 import ProfilePage from './pages/ProfilePage';
 import SeoDestinationPage from './pages/SeoDestinationPage';
 import PartnersPage from './pages/PartnersPage';
+import BookingStatusPage from './pages/BookingStatusPage';
 
 // Mock Data for Home Page Collections
 const MOCK_COLLECTIONS = [
@@ -146,6 +147,7 @@ function AppContent() {
         {currentView === 'profile' && <ProfilePage />}
         {currentView === 'seo' && <SeoDestinationPage />}
         {currentView === 'partners' && <PartnersPage />}
+        {currentView === 'status' && <BookingStatusPage />}
       </main>
 
       {/* Footer Placeholder */}
