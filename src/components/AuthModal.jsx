@@ -131,7 +131,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   Kodni olish
                 </button>
               </form>
-            ) : (
+            ) : step === 2 ? (
               <form onSubmit={handleVerify} className="space-y-4">
                  <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">SMS kodni kiriting</label>
