@@ -152,9 +152,7 @@ function AppContent() {
       <footer className="border-t border-neutral-200 bg-neutral-50 py-12 mt-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-6 w-6 overflow-hidden relative flex items-center justify-center rounded-sm">
-              <embed src="/trip-logo.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" className="absolute w-[120%] h-[120%] max-w-none pointer-events-none bg-white" style={{ border: 'none', outline: 'none' }} />
-            </div>
+            <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-6 w-6 object-contain rounded-md" />
             <span className="text-lg font-bold tracking-tight text-neutral-900">Visitca Trip</span>
           </div>
           <p className="text-sm text-neutral-500 max-w-md mb-6">
