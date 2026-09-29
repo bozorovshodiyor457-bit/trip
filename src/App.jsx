@@ -152,8 +152,8 @@ function AppContent() {
       <footer className="border-t border-neutral-200 bg-neutral-50 py-12 mt-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4">
-            <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-6 w-6 object-contain rounded-md" />
-            <span className="text-lg font-bold tracking-tight text-neutral-900">Visitca Trip</span>
+            <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-8 w-8 object-contain rounded-md" />
+            <span className="text-xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
           </div>
           <p className="text-sm text-neutral-500 max-w-md mb-6">
             O'zbekistonning boy tarixi, madaniyati va go'zal tabiatini biz bilan birga kashf eting.

@@ -39,8 +39,8 @@ export default function Header({ onLoginClick, onLogoClick, onNavClick }) {
         
         {/* Logo */}
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); onLogoClick && onLogoClick(); }}>
-          <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-8 w-8 object-contain rounded-md" />
-          <span className="text-xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
+          <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-10 w-10 object-contain rounded-md" />
+          <span className="text-2xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
         </div>
 
         {/* Right side navigation */}
