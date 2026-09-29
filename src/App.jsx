@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
+import { useAppContext } from './context/AppProvider';
+import { useTranslation } from './utils/i18n';
 import SearchBar from './components/SearchBar';
 import TourCard from './components/TourCard';
 import SearchPage from './pages/SearchPage';
@@ -69,6 +71,8 @@ const MOCK_TOURS = [
 ];
 
 function AppContent() {
+  const { language } = useAppContext();
+  const t = useTranslation(language);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [activeCollection, setActiveCollection] = useState('popular');
   const navigate = useNavigate();
@@ -90,10 +94,10 @@ function AppContent() {
             <section className="relative px-4 pt-20 pb-28 sm:px-6 lg:px-8 bg-neutral-50/50">
               <div className="mx-auto max-w-7xl text-center">
                 <h1 className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl md:text-6xl mb-6">
-                  O'zbekiston kashf etilishini kutmoqda
+                  {t('heroTitle')}
                 </h1>
                 <p className="mx-auto max-w-2xl text-lg text-neutral-500 mb-12">
-                  Visitca Trip — O'zbekiston bo'ylab eng yaxshi turlar, mehmonxonalar va sarguzashtlarni topish va band qilish uchun ishonchli hamrohingiz.
+                  {t('heroDesc')}
                 </p>
                 
                 <div onClick={() => navigate('/search')}>
@@ -101,7 +105,7 @@ function AppContent() {
                 </div>
                 
                 <p className="mt-6 text-sm text-neutral-400">
-                  (Qidiruv paneliga bosib "C-03: Qidiruv" ga, Pastdagi istalgan turga bosib "C-05: Tur tafsilotlari" ga o'ting)
+                  {t('searchHint')}
                 </p>
               </div>
             </section>
@@ -158,9 +162,9 @@ function AppContent() {
             <span className="text-xl font-bold tracking-tight text-neutral-900">Visitca Trip</span>
           </div>
           <p className="text-sm text-neutral-500 max-w-md mb-6">
-            O'zbekistonning boy tarixi, madaniyati va go'zal tabiatini biz bilan birga kashf eting.
+            {t('footerText')}
           </p>
-          <p className="text-xs text-neutral-400">&copy; 2026 Visitca Trip. Barcha huquqlar himoyalangan.</p>
+          <p className="text-xs text-neutral-400">{t('footerRights')}</p>
         </div>
       </footer>
 

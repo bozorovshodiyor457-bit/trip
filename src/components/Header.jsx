@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
+import { useTranslation } from '../utils/i18n';
 
 const MOCK_NOTIFICATIONS = [
   { id: 1, type: 'success', title: "Bron tasdiqlandi", desc: "Samarqand sayohatiga joyingiz kafolatlandi.", time: "2 soat oldin", read: false },
@@ -13,6 +14,7 @@ const MOCK_NOTIFICATIONS = [
 export default function Header({ onLoginClick }) {
   const navigate = useNavigate();
   const { language, setLanguage, currency, setCurrency, user, setUser } = useAppContext();
+  const t = useTranslation(language);
   const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -49,15 +51,15 @@ export default function Header({ onLoginClick }) {
         <div className="flex items-center gap-4 sm:gap-6">
           
           <button onClick={() => { closeAllPopovers(); navigate('/seo/samarqand'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
-            SEO Sahifa
+            {t('seoPage')}
           </button>
           
           <button onClick={() => { closeAllPopovers(); navigate('/partners'); }} className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 hidden md:block">
-            Hamkorlarga
+            {t('partners')}
           </button>
           
           <button onClick={() => { closeAllPopovers(); navigate('/status'); }} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hidden lg:block">
-            B2B / Statuslar
+            {t('b2bStatus')}
           </button>
 
           <button onClick={() => { closeAllPopovers(); navigate('/favorites'); }} className="text-neutral-500 hover:text-red-500 transition-colors hidden sm:block">
@@ -81,16 +83,16 @@ export default function Header({ onLoginClick }) {
             {notifOpen && (
               <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-full sm:left-auto sm:right-0 mt-3 sm:w-96 origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden z-50">
                 <div className="px-4 py-3 border-b border-neutral-100 flex justify-between items-center bg-neutral-50">
-                  <h3 className="text-sm font-bold text-neutral-900">Bildirishnomalar</h3>
+                  <h3 className="text-sm font-bold text-neutral-900">{t('notifications')}</h3>
                   {unreadCount > 0 && (
                     <button onClick={markAllRead} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
-                      Barchasini o'qildi qilish
+                      {t('markAllRead')}
                     </button>
                   )}
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-neutral-500">Hech qanday bildirishnoma yo'q</div>
+                    <div className="p-6 text-center text-sm text-neutral-500">{t('noNotif')}</div>
                   ) : (
                     <div className="divide-y divide-neutral-100">
                       {notifications.map(notif => (
@@ -172,22 +174,22 @@ export default function Header({ onLoginClick }) {
                   </div>
                   <div className="py-1">
                     <button onClick={() => { closeAllPopovers(); navigate('/profile'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm font-bold text-neutral-900 hover:bg-neutral-50 border-b border-neutral-100 mb-1">
-                      Mening profilim
+                      {t('myProfile')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/my-trips'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
-                      Mening safarlarim
+                      {t('myTrips')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/chat'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
-                      Xabarlar (Chat)
+                      {t('chat')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/custom-tour'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
-                      Men uchun tur
+                      {t('customTour')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/support'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
-                      Qo'llab-quvvatlash
+                      {t('support')}
                     </button>
                     <button onClick={() => { setUser(null); setProfileOpen(false); navigate('/'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-neutral-100 mt-1">
-                      <LogOut className="h-4 w-4" /> Chiqish
+                      <LogOut className="h-4 w-4" /> {t('logout')}
                     </button>
                   </div>
                 </div>
@@ -199,7 +201,7 @@ export default function Header({ onLoginClick }) {
               className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
               <UserIcon className="h-4 w-4" />
-              Kirish
+              {t('login')}
             </button>
           )}
 
