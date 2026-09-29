@@ -3,7 +3,7 @@ import { X, Smartphone, Mail, ShieldCheck, User } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 
 export default function AuthModal({ isOpen, onClose }) {
-  const { setUser } = useAppContext();
+  const { setUser, t } = useAppContext();
   const [activeTab, setActiveTab] = useState('local'); // 'local' or 'foreign'
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState('');
@@ -98,7 +98,7 @@ export default function AuthModal({ isOpen, onClose }) {
         </button>
 
         <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white mb-6">
-          {activeTab === 'foreign' && isSignUp ? "Ro'yxatdan o'tish" : "Tizimga kirish"}
+          {activeTab === 'foreign' && isSignUp ? t('auth.signup') : t('auth.loginTitle')}
         </h2>
 
         <div className="flex space-x-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1 mb-6">
@@ -106,13 +106,13 @@ export default function AuthModal({ isOpen, onClose }) {
             onClick={() => { setActiveTab('local'); setStep(1); setIsSignUp(false); }}
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${activeTab === 'local' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}
           >
-            O'zbekiston fuqarosi
+            {t('auth.local')}
           </button>
           <button
             onClick={() => { setActiveTab('foreign'); setStep(1); }}
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${activeTab === 'foreign' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}
           >
-            Xorijiy turist
+            {t('auth.foreign')}
           </button>
         </div>
 
@@ -121,7 +121,7 @@ export default function AuthModal({ isOpen, onClose }) {
             {step === 1 ? (
               <form onSubmit={handleSendCode} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Telefon raqami</label>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('modals.phoneLabel')}</label>
                   <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 shadow-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 flex items-center">
                     <span className="text-neutral-500 dark:text-neutral-400 pr-2 border-r border-neutral-200 dark:border-neutral-700 mr-2">+998</span>
                     <input
@@ -139,7 +139,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   type="submit"
                   className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
                 >
-                  Kodni olish
+                  {t('modals.sendCode')}
                 </button>
               </form>
             ) : step === 2 ? (
@@ -203,7 +203,7 @@ export default function AuthModal({ isOpen, onClose }) {
              <form onSubmit={handleEmailLogin} className="space-y-4">
                 {isSignUp && (
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">To'liq ism (F.I.Sh.)</label>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('auth.fullName') || "To'liq ism (F.I.Sh.)"}</label>
                     <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 shadow-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 flex items-center">
                       <input
                         type="text"
@@ -218,7 +218,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">E-mail manzil</label>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('auth.email')}</label>
                   <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 shadow-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 flex items-center">
                     <input
                       type="email"
@@ -235,7 +235,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   type="submit"
                   className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
                 >
-                  {isSignUp ? "Ro'yxatdan o'tish" : "Kirish"}
+                  {isSignUp ? t('auth.signup') : t('auth.loginBtn')}
                 </button>
              </form>
 
@@ -244,7 +244,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   <div className="w-full border-t border-neutral-200 dark:border-neutral-700" />
                 </div>
                 <div className="relative flex justify-center text-sm font-medium leading-6">
-                  <span className="bg-white dark:bg-neutral-900 px-6 text-neutral-500 dark:text-neutral-400">Yoki</span>
+                  <span className="bg-white dark:bg-neutral-900 px-6 text-neutral-500 dark:text-neutral-400">{t('auth.or')}</span>
                 </div>
               </div>
 
@@ -271,16 +271,16 @@ export default function AuthModal({ isOpen, onClose }) {
               <div className="mt-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
                 {isSignUp ? (
                   <>
-                    Hisobingiz bormi?{' '}
+                    {t('auth.haveAccount') || "Hisobingiz bormi?"}{' '}
                     <button type="button" onClick={() => setIsSignUp(false)} className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
-                      Kirish
+                      {t('auth.loginBtn')}
                     </button>
                   </>
                 ) : (
                   <>
-                    Hisobingiz yo'qmi?{' '}
+                    {t('auth.noAccount') || "Hisobingiz yo'qmi?"}{' '}
                     <button type="button" onClick={() => setIsSignUp(true)} className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
-                      Ro'yxatdan o'tish
+                      {t('auth.signup')}
                     </button>
                   </>
                 )}

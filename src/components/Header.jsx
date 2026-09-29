@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
-import { useTranslation } from '../utils/i18n';
 
 const MOCK_NOTIFICATIONS = [
   { id: 1, type: 'success', title: "Bron tasdiqlandi", desc: "Samarqand sayohatiga joyingiz kafolatlandi.", time: "2 soat oldin", read: false },
@@ -13,8 +12,7 @@ const MOCK_NOTIFICATIONS = [
 
 export default function Header({ onLoginClick }) {
   const navigate = useNavigate();
-  const { language, setLanguage, currency, setCurrency, user, setUser } = useAppContext();
-  const t = useTranslation(language);
+  const { language, setLanguage, currency, setCurrency, user, setUser, t } = useAppContext();
   const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -59,15 +57,15 @@ export default function Header({ onLoginClick }) {
         <div className="flex items-center gap-3 sm:gap-6">
           
           <button onClick={() => { closeAllPopovers(); navigate('/seo/samarqand'); }} className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hidden md:block transition-colors">
-            {t('seoPage')}
+            {t('nav.seo')}
           </button>
           
           <button onClick={() => { closeAllPopovers(); navigate('/partners'); }} className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hidden md:block transition-colors">
-            {t('partners')}
+            {t('nav.partners')}
           </button>
           
           <button onClick={() => { closeAllPopovers(); navigate('/status'); }} className="text-sm font-semibold text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hidden lg:block transition-colors">
-            {t('b2bStatus')}
+            {t('nav.b2b')}
           </button>
 
           <button onClick={() => { closeAllPopovers(); navigate('/favorites'); }} className="text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-500 transition-colors hidden sm:block">
@@ -91,10 +89,10 @@ export default function Header({ onLoginClick }) {
             {notifOpen && (
               <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-full sm:left-auto sm:right-0 mt-3 sm:w-96 origin-top-right rounded-2xl bg-white dark:bg-neutral-800 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none overflow-hidden z-50">
                 <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center bg-neutral-50 dark:bg-neutral-900/50">
-                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white">{t('notifications')}</h3>
+                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white">{t('nav.notifications')}</h3>
                   {unreadCount > 0 && (
                     <button onClick={markAllRead} className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
-                      {t('markAllRead')}
+                      {t('nav.markAllRead')}
                     </button>
                   )}
                 </div>
@@ -182,22 +180,22 @@ export default function Header({ onLoginClick }) {
                   </div>
                   <div className="py-1">
                     <button onClick={() => { closeAllPopovers(); navigate('/profile'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm font-bold text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700 border-b border-neutral-100 dark:border-neutral-700 mb-1">
-                      {t('myProfile')}
+                      {t('nav.profile')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/my-trips'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                      {t('myTrips')}
+                      {t('nav.myTrips')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/chat'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                      {t('chat')}
+                      {t('nav.chat')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/custom-tour'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                      {t('customTour')}
+                      {t('nav.customTour')}
                     </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/support'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                      {t('support')}
+                      {t('nav.support')}
                     </button>
                     <button onClick={() => { setUser(null); setProfileOpen(false); navigate('/'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-neutral-700 border-t border-neutral-100 dark:border-neutral-700 mt-1">
-                      <LogOut className="h-4 w-4" /> {t('logout')}
+                      <LogOut className="h-4 w-4" /> {t('nav.logout')}
                     </button>
                   </div>
                 </div>
@@ -209,7 +207,7 @@ export default function Header({ onLoginClick }) {
               className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
               <UserIcon className="h-4 w-4" />
-              {t('login')}
+              {t('nav.login')}
             </button>
           )}
 
@@ -230,7 +228,7 @@ export default function Header({ onLoginClick }) {
             
             <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex gap-4">
               <div className="flex-1">
-                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">Til</label>
+                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">{t('nav.language')}</label>
                 <div className="flex flex-wrap gap-2">
                   {languages.map(l => (
                     <button key={l} onClick={() => setLanguage(l)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${l === language ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'}`}>{l}</button>
@@ -241,7 +239,7 @@ export default function Header({ onLoginClick }) {
 
             <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex gap-4">
               <div className="flex-1">
-                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">Valyuta</label>
+                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">{t('nav.currency')}</label>
                 <div className="flex flex-wrap gap-2">
                   {currencies.map(c => (
                     <button key={c} onClick={() => setCurrency(c)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${c === currency ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'}`}>{c}</button>
@@ -252,16 +250,16 @@ export default function Header({ onLoginClick }) {
 
             <div className="p-2 space-y-1 mt-2">
               <button onClick={() => { setMobileMenuOpen(false); navigate('/seo/samarqand'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('seoPage')}
+                {t('nav.seo')}
               </button>
               <button onClick={() => { setMobileMenuOpen(false); navigate('/partners'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('partners')}
+                {t('nav.partners')}
               </button>
               <button onClick={() => { setMobileMenuOpen(false); navigate('/status'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('b2bStatus')}
+                {t('nav.b2b')}
               </button>
               <button onClick={() => { setMobileMenuOpen(false); navigate('/favorites'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                Sevimlilar
+                {t('nav.favorites')}
               </button>
             </div>
           </div>

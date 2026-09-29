@@ -1,5 +1,50 @@
 export const translations = {
   uz: {
+    nav: {
+      home: 'Bosh sahifa',
+      tours: 'Turlar',
+      partners: 'Hamkorlarga',
+      seo: 'SEO Sahifa',
+      login: 'Kirish',
+      logout: 'Chiqish',
+      language: 'Til',
+      currency: 'Valyuta',
+      profile: 'Mening profilim',
+      myTrips: 'Mening safarlarim',
+      chat: 'Xabarlar (Chat)',
+      customTour: 'Men uchun tur',
+      support: 'Qo\'llab-quvvatlash',
+      notifications: 'Bildirishnomalar',
+      markAllRead: 'Barchasini o\'qildi qilish',
+      favorites: 'Sevimlilar',
+      b2b: 'B2B / Statuslar'
+    },
+    auth: {
+      loginTitle: 'Tizimga kirish',
+      signup: 'Ro\'yxatdan o\'tish',
+      local: 'O\'zbekiston fuqarosi',
+      foreign: 'Xorijiy turist',
+      email: 'E-mail manzil',
+      loginBtn: 'Kirish',
+      or: 'Yoki',
+      google: 'Google',
+      telegram: 'Telegram',
+      fullName: 'To\'liq ism (F.I.Sh.)',
+      haveAccount: 'Hisobingiz bormi?',
+      noAccount: 'Hisobingiz yo\'qmi?'
+    },
+    search: {
+      where: 'Qayerga?',
+      when: 'Qachon?',
+      who: 'Kimlar?',
+      searchBtn: 'Qidirish'
+    },
+    common: {
+      loading: 'Yuklanmoqda...',
+      cancel: 'Bekor qilish',
+      confirm: 'Tasdiqlash',
+      view: 'Ko\'rish'
+    },
     header: {
       seoPage: "SEO Sahifa",
       partners: "Hamkorlarga",
@@ -161,6 +206,51 @@ export const translations = {
     }
   },
   ru: {
+    nav: {
+      home: 'Главная',
+      tours: 'Туры',
+      partners: 'Партнерам',
+      seo: 'SEO Страница',
+      login: 'Войти',
+      logout: 'Выйти',
+      language: 'Язык',
+      currency: 'Валюта',
+      profile: 'Мой профиль',
+      myTrips: 'Мои поездки',
+      chat: 'Чат',
+      customTour: 'Индивидуальный тур',
+      support: 'Поддержка',
+      notifications: 'Уведомления',
+      markAllRead: 'Прочитать все',
+      favorites: 'Избранное',
+      b2b: 'B2B / Статусы'
+    },
+    auth: {
+      loginTitle: 'Вход в систему',
+      signup: 'Регистрация',
+      local: 'Гражданин Узбекистана',
+      foreign: 'Иностранный турист',
+      email: 'E-mail адрес',
+      loginBtn: 'Войти',
+      or: 'Или',
+      google: 'Google',
+      telegram: 'Telegram',
+      fullName: 'Полное имя (Ф.И.О.)',
+      haveAccount: 'Уже есть аккаунт?',
+      noAccount: 'Нет аккаунта?'
+    },
+    search: {
+      where: 'Куда?',
+      when: 'Когда?',
+      who: 'Кто?',
+      searchBtn: 'Найти'
+    },
+    common: {
+      loading: 'Загрузка...',
+      cancel: 'Отмена',
+      confirm: 'Подтвердить',
+      view: 'Смотреть'
+    },
     header: {
       seoPage: "SEO Страница",
       partners: "Партнерам",
@@ -322,6 +412,51 @@ export const translations = {
     }
   },
   en: {
+    nav: {
+      home: 'Home',
+      tours: 'Tours',
+      partners: 'Partners',
+      seo: 'SEO Page',
+      login: 'Login',
+      logout: 'Logout',
+      language: 'Language',
+      currency: 'Currency',
+      profile: 'My Profile',
+      myTrips: 'My Trips',
+      chat: 'Chat',
+      customTour: 'Custom Tour',
+      support: 'Support',
+      notifications: 'Notifications',
+      markAllRead: 'Mark all read',
+      favorites: 'Favorites',
+      b2b: 'B2B / Statuses'
+    },
+    auth: {
+      loginTitle: 'Login',
+      signup: 'Sign Up',
+      local: 'Uzbekistan Citizen',
+      foreign: 'Foreign Tourist',
+      email: 'E-mail address',
+      loginBtn: 'Login',
+      or: 'Or',
+      google: 'Google',
+      telegram: 'Telegram',
+      fullName: 'Full Name',
+      haveAccount: 'Already have an account?',
+      noAccount: 'Don\'t have an account?'
+    },
+    search: {
+      where: 'Where to?',
+      when: 'When?',
+      who: 'Who?',
+      searchBtn: 'Search'
+    },
+    common: {
+      loading: 'Loading...',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      view: 'View'
+    },
     header: {
       seoPage: "SEO Page",
       partners: "For Partners",
