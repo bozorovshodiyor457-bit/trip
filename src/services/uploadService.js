@@ -92,11 +92,11 @@ export const uploadAvatar = async (file) => {
       try { resJson = JSON.parse(resText); } catch (e) {}
 
       if (response.ok) {
-        const avatarUrl = resJson?.url || resJson?.avatarUrl || resJson?.fileUrl || resJson?.avatar || resJson?.data?.url || resJson?.data?.avatarUrl || resJson?.path;
-        if (avatarUrl) {
+        const avatarUrl = resJson?.avatar_url || resJson?.file?.url || (typeof resJson?.url === 'string' ? resJson.url : resJson?.url?.url) || resJson?.avatarUrl || resJson?.fileUrl || resJson?.avatar || resJson?.data?.url || resJson?.data?.avatar_url || resJson?.path;
+        if (avatarUrl && typeof avatarUrl === 'string') {
           return { success: true, url: avatarUrl, data: resJson };
         }
-        return { success: true, url: resJson?.url || resJson, data: resJson };
+        return { success: true, url: String(avatarUrl), data: resJson };
       }
 
       lastErrMessage = resJson?.error?.message || resJson?.message || resJson?.error || `Upload failed with status ${response.status}`;

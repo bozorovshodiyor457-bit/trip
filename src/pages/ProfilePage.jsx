@@ -54,7 +54,10 @@ export default function ProfilePage() {
   }, [setUser]);
 
   const currentUser = user || {};
-  const userAvatar = currentUser.avatar || currentUser.avatarUrl || null;
+  const rawAvatar = currentUser.avatar || currentUser.avatarUrl;
+  const userAvatar = typeof rawAvatar === 'string' 
+    ? rawAvatar 
+    : (rawAvatar?.avatar_url || rawAvatar?.url || rawAvatar?.file?.url || null);
 
   const handleAvatarFileSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -83,7 +86,8 @@ export default function ProfilePage() {
       const res = await uploadService.uploadAvatar(file);
       console.log("API Response: POST /api/uploads/avatar", res);
 
-      const newAvatarUrl = res?.url || res?.avatarUrl || res?.data?.url || res?.data?.avatarUrl || res?.fileUrl;
+      const rawUrl = res?.url || res?.data?.avatar_url || res?.data?.file?.url || res?.data?.url || res?.avatarUrl;
+      const newAvatarUrl = typeof rawUrl === 'string' ? rawUrl : (rawUrl?.avatar_url || rawUrl?.url || null);
       
       if (!newAvatarUrl) {
         throw new Error("Serverdan rasm URL havolasi qaytmadi");
