@@ -58,8 +58,11 @@ export default function ProfilePage() {
     return () => { isMounted = false; };
   }, [setUser]);
 
+  const [imgLoadError, setImgLoadError] = useState(false);
+
   const currentUser = user || {};
-  const avatarSrc = uploadedAvatarUrl || currentUser.avatar_url || currentUser.avatar || currentUser.avatarUrl || null;
+  const rawAvatar = uploadedAvatarUrl || currentUser.avatar_url || currentUser.avatar || currentUser.avatarUrl || null;
+  const avatarSrc = (rawAvatar && typeof rawAvatar === 'string' && !rawAvatar.startsWith('blob:')) ? rawAvatar : null;
 
   const handleAvatarFileSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -67,6 +70,7 @@ export default function ProfilePage() {
 
     setAvatarError('');
     setAvatarSuccess('');
+    setImgLoadError(false);
 
     // 1. Check file type
     if (!file.type.startsWith('image/')) {
@@ -91,12 +95,13 @@ export default function ProfilePage() {
       const rawUrl = res?.avatar_url || res?.url || res?.data?.avatar_url || res?.data?.url || res?.file?.url || res?.avatarUrl;
       const newAvatarUrl = typeof rawUrl === 'string' ? rawUrl : (rawUrl?.avatar_url || rawUrl?.url || null);
       
-      if (!newAvatarUrl) {
-        throw new Error("Serverdan rasm URL havolasi qaytmadi");
+      if (!newAvatarUrl || typeof newAvatarUrl !== 'string' || newAvatarUrl.startsWith('blob:')) {
+        throw new Error("Serverdan yaroqli rasm URL havolasi qaytmadi");
       }
 
       // 1. Update local state immediately
       setUploadedAvatarUrl(newAvatarUrl);
+      setImgLoadError(false);
 
       // 2. Update global user state with real server HTTPS URL
       setUser(prev => ({
@@ -126,13 +131,15 @@ export default function ProfilePage() {
         if (meRes) {
           const freshUser = meRes.user || meRes.data || meRes;
           const freshUrl = freshUser.avatar_url || freshUser.avatar || freshUser.avatarUrl || newAvatarUrl;
-          setUploadedAvatarUrl(freshUrl);
-          setUser(prev => ({
-            ...(freshUser || {}),
-            avatar_url: freshUrl,
-            avatar: freshUrl,
-            avatarUrl: freshUrl
-          }));
+          if (typeof freshUrl === 'string' && !freshUrl.startsWith('blob:')) {
+            setUploadedAvatarUrl(freshUrl);
+            setUser(prev => ({
+              ...(freshUser || {}),
+              avatar_url: freshUrl,
+              avatar: freshUrl,
+              avatarUrl: freshUrl
+            }));
+          }
         }
       } catch (meErr) {
         console.warn("Profile refetch notice:", meErr);
@@ -172,13 +179,13 @@ export default function ProfilePage() {
 
               <div className="relative inline-block mb-4 group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <div className="h-24 w-24 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto border-4 border-white dark:border-neutral-800 shadow-md overflow-hidden relative">
-                  {avatarSrc ? (
+                  {avatarSrc && !imgLoadError ? (
                     <img 
                       src={avatarSrc} 
                       alt={currentUser.name || currentUser.fullName || currentUser.email || "Profil rasmi"} 
                       className="h-full w-full object-cover border-2 border-emerald-500 shadow-sm"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
+                      onError={() => {
+                        setImgLoadError(true);
                       }}
                     />
                   ) : (

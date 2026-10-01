@@ -224,7 +224,20 @@ export default function Header({ onLoginClick }) {
                 className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-2 sm:pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
                 aria-label="User menu"
               >
-                <img src={user.avatar_url || user.avatar || user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"} alt="User avatar" className="h-7 w-7 rounded-full object-cover" />
+                {(() => {
+                  const rawAvatar = user.avatar_url || user.avatar || user.avatarUrl;
+                  const validAvatar = (rawAvatar && typeof rawAvatar === 'string' && !rawAvatar.startsWith('blob:')) ? rawAvatar : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
+                  return (
+                    <img 
+                      src={validAvatar} 
+                      alt="User avatar" 
+                      className="h-7 w-7 rounded-full object-cover" 
+                      onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
+                      }}
+                    />
+                  );
+                })()}
                 <span className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden md:block">{user.name || user.email || 'Foydalanuvchi'}</span>
                 <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400 dark:text-neutral-500" />
               </button>

@@ -14,7 +14,14 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('visitca_user');
-      return savedUser ? JSON.parse(savedUser) : null;
+      if (!savedUser) return null;
+      const parsed = JSON.parse(savedUser);
+      if (parsed) {
+        if (typeof parsed.avatar_url === 'string' && parsed.avatar_url.startsWith('blob:')) delete parsed.avatar_url;
+        if (typeof parsed.avatar === 'string' && parsed.avatar.startsWith('blob:')) delete parsed.avatar;
+        if (typeof parsed.avatarUrl === 'string' && parsed.avatarUrl.startsWith('blob:')) delete parsed.avatarUrl;
+      }
+      return parsed;
     } catch (e) {
       console.warn("Failed to parse visitca_user from localStorage", e);
       return null;
@@ -28,7 +35,11 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       try {
-        localStorage.setItem('visitca_user', JSON.stringify(user));
+        const cleanUser = { ...user };
+        if (typeof cleanUser.avatar_url === 'string' && cleanUser.avatar_url.startsWith('blob:')) delete cleanUser.avatar_url;
+        if (typeof cleanUser.avatar === 'string' && cleanUser.avatar.startsWith('blob:')) delete cleanUser.avatar;
+        if (typeof cleanUser.avatarUrl === 'string' && cleanUser.avatarUrl.startsWith('blob:')) delete cleanUser.avatarUrl;
+        localStorage.setItem('visitca_user', JSON.stringify(cleanUser));
       } catch (e) {
         console.warn("Failed to save visitca_user to localStorage", e);
       }
