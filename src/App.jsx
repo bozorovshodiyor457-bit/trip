@@ -29,87 +29,12 @@ import {
   Loader2
 } from 'lucide-react';
 
-// Mock Data for Home Page Collections
-const MOCK_COLLECTIONS = [
+// Home Page Collections Filter Tabs
+const COLLECTIONS = [
   { id: 'popular', title: "Mashhur yo'nalishlar" },
   { id: 'upcoming', title: "Yaqin kunlardagi safarlar" },
   { id: 'seasonal', title: "Mavsumiy turlar (Kuz)" },
   { id: 'discounts', title: "Aksiyalar va chegirmalar" },
-];
-
-const MOCK_TOURS = [
-  {
-    id: 1,
-    title: "Afsonaviy Samarqand bo'ylab sayohat",
-    location: "Samarqand, O'zbekiston",
-    city: "Samarqand",
-    image: "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    priceUZS: 450000,
-    duration: "2 kun",
-    durationDetails: "2 kun / 1 kecha",
-    collectionId: 'popular'
-  },
-  {
-    id: 2,
-    title: "Eski Buxoro ko'chalari va minorasi",
-    location: "Buxoro, O'zbekiston",
-    city: "Buxoro",
-    image: "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    priceUZS: 520000,
-    duration: "3 kun",
-    durationDetails: "3 kun / 2 kecha",
-    collectionId: 'popular'
-  },
-  {
-    id: 3,
-    title: "Ichan Qal'a - Ochiq osmon ostidagi muzey",
-    location: "Xiva, Xorazm",
-    city: "Xiva",
-    image: "https://images.unsplash.com/photo-1609848529241-10c0e7d781b0?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    priceUZS: 650000,
-    duration: "3 kun",
-    durationDetails: "3 kun / 2 kecha",
-    collectionId: 'popular'
-  },
-  {
-    id: 4,
-    title: "Zomin tog'lari bo'ylab kemping sarguzashti",
-    location: "Zomin, Jizzax",
-    city: "Zomin",
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
-    rating: 4.7,
-    priceUZS: 320000,
-    duration: "1 kun",
-    durationDetails: "1 kun / 0 kecha",
-    collectionId: 'upcoming'
-  },
-  {
-    id: 5,
-    title: "Chorvoq va Chimyon tog' kurort safari",
-    location: "Toshkent viloyati",
-    city: "Chimyon",
-    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
-    rating: 4.85,
-    priceUZS: 280000,
-    duration: "1 kun",
-    durationDetails: "1 kun / 0 kecha",
-    collectionId: 'seasonal'
-  },
-  {
-    id: 6,
-    title: "Toshkent va Samarqand Gastronomik Gastrol",
-    location: "Toshkent - Samarqand",
-    city: "Toshkent",
-    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
-    rating: 4.95,
-    priceUZS: 490000,
-    duration: "2 kun",
-    durationDetails: "2 kun / 1 kecha",
-    collectionId: 'discounts'
-  }
 ];
 
 function AppContent() {
@@ -126,14 +51,17 @@ function AppContent() {
     async function loadTours() {
       try {
         setIsToursLoading(true);
+        console.log("API Request: GET /api/b2c/tours", { collection: activeCollection });
         const res = await tourService.getTours({ collection: activeCollection });
+        console.log("API Response: GET /api/b2c/tours", res);
+        
         if (isMounted) {
           const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
-          setTours(list.length > 0 ? list : MOCK_TOURS);
+          setTours(list);
         }
       } catch (err) {
-        console.warn('Failed to load tours from API, using fallback:', err);
-        if (isMounted) setTours(MOCK_TOURS);
+        console.error('API Error: GET /api/b2c/tours failed:', err);
+        if (isMounted) setTours([]);
       } finally {
         if (isMounted) setIsToursLoading(false);
       }
@@ -271,7 +199,7 @@ function AppContent() {
 
                 {/* Collection Filter Buttons */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
-                  {MOCK_COLLECTIONS.map(collection => (
+                  {COLLECTIONS.map(collection => (
                     <button
                       key={collection.id}
                       onClick={() => setActiveCollection(collection.id)}

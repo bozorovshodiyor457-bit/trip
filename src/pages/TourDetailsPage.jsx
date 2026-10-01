@@ -10,63 +10,21 @@ import reviewService from '../services/reviewService';
 import interactionService from '../services/interactionService';
 import chatService from '../services/chatService';
 
-const MOCK_TOUR = {
-  id: 1,
-  title: "Afsonaviy Samarqand bo'ylab 2 kunlik sayohat",
-  category: "Madaniy tur",
-  duration: "2 kun",
-  languages: ["O'zbek", "Rus", "Ingliz"],
-  rating: 4.9,
-  reviewsCount: 128,
-  priceUZS: 450000,
-  images: [
-    "https://picsum.photos/seed/tour10/800/600",
-    "https://picsum.photos/seed/tour11/800/600",
-    "https://picsum.photos/seed/tour12/800/600",
-    "https://picsum.photos/seed/tour13/800/600",
-    "https://picsum.photos/seed/tour14/800/600",
-  ],
-  inclusions: ["Konditsionerli transport", "Professional gid xizmati", "Ekskursiya davomida ichimlik suvi"],
-  exclusions: ["Muzeylarga kirish chiptalari", "Tushlik va kechki ovqat", "Shaxsiy xarajatlar"],
-  meetingPoint: "Samarqand temir yo'l vokzali, asosiy kirish joyi",
-  program: [
-    { day: "1-kun", title: "Ko'hna shaharga kirib kelish", desc: "Registon maydoni, Go'ri Amir maqbarasi va Bibixonim masjidiga tashrif. Kechki ovqat milliy choyxonada." },
-    { day: "2-kun", title: "Yulduzlar ilmi va ziyorat", desc: "Ulug'bek rasadxonasi, Shohi Zinda majmuasi va Siyob bozorida erkin vaqt." }
-  ],
-  organizer: {
-    name: "Alisher Vohidov",
-    type: "Gid",
-    isVerified: true,
-    experience: "8 yil",
-    languages: "UZ, RU, EN",
-    avatar: "https://i.pravatar.cc/150?u=alisher",
-    rating: 4.9,
-    reviewCount: 340
-  }
-};
-
-const AVAILABLE_DATES = [
-  { id: 1, range: "24 Okt - 25 Okt", status: "Mavjud (3 ta joy)" },
-  { id: 2, range: "01 Noy - 02 Noy", status: "Mavjud (8 ta joy)" },
-  { id: 3, range: "12 Noy - 14 Noy", status: "Mavjud (12 ta joy)" },
-  { id: 4, range: "20 Noy - 22 Noy", status: "Mavjud (5 ta joy)" },
-];
-
 export default function TourDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('group'); // group, individual
   const [openDay, setOpenDay] = useState(0);
   const [tour, setTour] = useState(null);
+  const [availableDates, setAvailableDates] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isChatStarting, setIsChatStarting] = useState(false);
 
   // Booking Widget States
   const [adults, setAdults] = useState(2);
   const [childrenCount, setChildrenCount] = useState(0);
-  const [selectedDateRange, setSelectedDateRange] = useState("24 Okt - 25 Okt");
+  const [selectedDateRange, setSelectedDateRange] = useState("Tanlanmagan");
   
   // Modals
   const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
@@ -76,20 +34,41 @@ export default function TourDetailsPage() {
     let isMounted = true;
     async function loadTourData() {
       if (!id) {
-        setTour(MOCK_TOUR);
         setIsLoading(false);
         return;
       }
       try {
         setIsLoading(true);
+        console.log(`API Request: GET /api/b2c/tours/${id}`);
         const data = await tourService.getTourById(id);
-        if (isMounted) {
-          const detail = data?.tour || data?.data || data || MOCK_TOUR;
+        console.log(`API Response: GET /api/b2c/tours/${id}`, data);
+
+        if (isMounted && data) {
+          const detail = data?.tour || data?.data || data;
           setTour(detail);
+
+          // If optionId exists, fetch real departure slots
+          const optionId = detail?.options?.[0]?._id || detail?.optionId || detail?.id;
+          if (optionId) {
+            try {
+              console.log(`API Request: GET /api/b2c/tours/options/${optionId}/departures`);
+              const depRes = await tourService.getOptionDepartures(optionId);
+              console.log(`API Response: GET /api/b2c/tours/options/${optionId}/departures`, depRes);
+              
+              const slots = depRes?.departures || depRes?.data || (Array.isArray(depRes) ? depRes : []);
+              if (slots.length > 0) {
+                setAvailableDates(slots);
+                const firstSlot = slots[0]?.date || slots[0]?.range || slots[0]?.startDate;
+                if (firstSlot) setSelectedDateRange(firstSlot);
+              }
+            } catch (depErr) {
+              console.warn("Departures API notice:", depErr);
+            }
+          }
         }
       } catch (err) {
-        console.warn(`Failed to fetch tour ${id}, using fallback:`, err);
-        if (isMounted) setTour(MOCK_TOUR);
+        console.error(`API Error: GET /api/b2c/tours/${id} failed:`, err);
+        if (isMounted) setTour(null);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -100,7 +79,7 @@ export default function TourDetailsPage() {
           setReviews(revData?.reviews || revData?.data || []);
         }
       } catch (err) {
-        console.warn('Reviews fetch error:', err);
+        console.warn('Reviews API notice:', err);
       }
     }
     loadTourData();
