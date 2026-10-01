@@ -26,12 +26,19 @@ function buildAuthPayload(identifier, extraData = {}) {
   }
 }
 
+export const getCompanions = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const response = await api.get('/api/b2c/auth/companions', config);
+    return response.data;
+  } catch (error) {
+    console.warn("getCompanions notice:", error.message || error);
+    return [];
+  }
+};
+
 const authService = {
-  /**
-   * 1-qadam: OTP yuborish (Send OTP)
-   * POST /api/b2c/auth/send-otp
-   * @param {string} identifier - Email yoki telefon raqami
-   */
   sendOtp: async (identifier) => {
     try {
       const payload = buildAuthPayload(identifier);
@@ -44,12 +51,6 @@ const authService = {
     }
   },
 
-  /**
-   * 2-qadam: OTP ni tasdiqlash (Verify OTP)
-   * POST /api/b2c/auth/verify-otp
-   * @param {string} identifier - Email yoki telefon raqami
-   * @param {string} code - OTP kodi
-   */
   verifyOtp: async (identifier, code) => {
     try {
       const payload = buildAuthPayload(identifier, { code: String(code).trim() });
@@ -62,11 +63,6 @@ const authService = {
     }
   },
 
-  /**
-   * 3-qadam: Foydalanuvchi profilini olish (Get Profile)
-   * GET /api/b2c/auth/me
-   * @param {string} token - JWT Token (ixtiyoriy, agar header yetarli bo'lmasa)
-   */
   getMe: async (token) => {
     try {
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -77,32 +73,12 @@ const authService = {
     }
   },
 
-  /**
-   * GET /api/b2c/auth/companions
-   * Get saved companions
-   */
-  getCompanions: async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await api.get('/api/b2c/auth/companions', config);
-      return response.data;
-    } catch (error) {
-      console.warn("getCompanions notice:", error.message || error);
-      return [];
-    }
-  },
+  getCompanions,
 
-  /**
-   * Telefon raqamiga SMS jo'natish
-   */
   sendLoginCode: async (phone) => {
     return authService.sendOtp(phone);
   },
 
-  /**
-   * SMS kodni tasdiqlash
-   */
   verifyCode: async (phone, code) => {
     return authService.verifyOtp(phone, code);
   }

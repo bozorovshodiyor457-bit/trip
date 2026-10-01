@@ -10,7 +10,7 @@ const uploadService = {
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('avatar', file);
 
       const config = {};
       if (token) {
@@ -21,10 +21,10 @@ const uploadService = {
       try {
         response = await api.post('/api/uploads/avatar', formData, config);
       } catch (err1) {
-        // Fallback: If 'file' field name gives 400, try 'avatar' field name
+        // Fallback: If 'avatar' field name gives 400, try 'file' field name
         if (err1.response?.status === 400) {
           const formData2 = new FormData();
-          formData2.append('avatar', file);
+          formData2.append('file', file);
           response = await api.post('/api/uploads/avatar', formData2, config);
         } else {
           throw err1;

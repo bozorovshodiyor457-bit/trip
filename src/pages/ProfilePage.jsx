@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User as UserIcon, ShieldCheck, Mail, Phone, Plus, Trash2, Edit2, ShieldAlert, Loader2, Camera } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 import uploadService from '../services/uploadService';
-import authService from '../services/authService';
+import authService, { getCompanions } from '../services/authService';
 import interactionService from '../services/interactionService';
 
 export default function ProfilePage() {
@@ -39,14 +39,11 @@ export default function ProfilePage() {
 
       try {
         console.log("API Request: GET /api/b2c/auth/companions");
-        const fetchComp = authService.getCompanions || interactionService.getCompanions;
-        if (typeof fetchComp === 'function') {
-          const compRes = await fetchComp();
-          console.log("API Response: GET /api/b2c/auth/companions", compRes);
-          if (isMounted) {
-            const list = compRes?.companions || compRes?.data || (Array.isArray(compRes) ? compRes : []);
-            setCompanions(list);
-          }
+        const compRes = await getCompanions();
+        console.log("API Response: GET /api/b2c/auth/companions", compRes);
+        if (isMounted) {
+          const list = compRes?.companions || compRes?.data || (Array.isArray(compRes) ? compRes : []);
+          setCompanions(list);
         }
       } catch (err) {
         console.warn("Companions fetch notice:", err);
@@ -180,7 +177,7 @@ export default function ProfilePage() {
               {avatarError && (
                 <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-950/40 p-3 border border-red-200 dark:border-red-800 text-left">
                   <p className="text-xs font-semibold text-red-600 dark:text-red-400 leading-snug">
-                    {typeof avatarError === 'string' ? avatarError : String(avatarError?.message || avatarError || 'Xatolik yuz berdi')}
+                    {typeof avatarError === 'object' ? (avatarError?.message || avatarError?.error?.message || JSON.stringify(avatarError)) : avatarError}
                   </p>
                 </div>
               )}
