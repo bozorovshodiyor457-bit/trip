@@ -36,10 +36,13 @@ const tourService = {
    */
   getTourById: async (id) => {
     try {
+      // If id is a simple number or mock ID, try API but catch 404 gracefully
       const response = await api.get(`/api/b2c/tours/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`getTourById (${id}) error:`, error);
+      if (error.response?.status !== 404) {
+        console.warn(`getTourById (${id}) notice:`, error.message || error);
+      }
       throw error.response?.data || error;
     }
   },
