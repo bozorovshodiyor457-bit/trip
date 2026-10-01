@@ -263,9 +263,6 @@ export default function Header({ onLoginClick }) {
                     <button onClick={() => { closeAllPopovers(); navigate('/my-trips'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800">
                       {t('nav.myTrips')}
                     </button>
-                    <button onClick={() => { closeAllPopovers(); navigate('/chat'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800">
-                      {t('nav.chat')}
-                    </button>
                     <button onClick={() => { closeAllPopovers(); navigate('/custom-tour'); }} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800">
                       {t('nav.customTour')}
                     </button>

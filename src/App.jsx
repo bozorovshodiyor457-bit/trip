@@ -12,7 +12,6 @@ import TourDetailsPage from './pages/TourDetailsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import CheckoutPage from './pages/CheckoutPage';
 import MyTripsPage from './pages/MyTripsPage';
-import ChatPage from './pages/ChatPage';
 import CustomTourPage from './pages/CustomTourPage';
 import SupportPage from './pages/SupportPage';
 import ProfilePage from './pages/ProfilePage';
@@ -21,14 +20,10 @@ import PartnersPage from './pages/PartnersPage';
 import BookingStatusPage from './pages/BookingStatusPage';
 import tourService from './services/tourService';
 import { 
-  Mountain, 
   Landmark, 
   Utensils, 
   Flame, 
-  ShieldCheck, 
-  CreditCard, 
-  Headphones, 
-  CalendarCheck,
+  Users,
   ChevronRight,
   Sparkles,
   Loader2
@@ -131,7 +126,7 @@ function AppContent() {
     async function loadTours() {
       try {
         setIsToursLoading(true);
-        const res = await tourService.getTours();
+        const res = await tourService.getTours({ collection: activeCollection });
         if (isMounted) {
           const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
           setTours(list.length > 0 ? list : MOCK_TOURS);
@@ -145,63 +140,40 @@ function AppContent() {
     }
     loadTours();
     return () => { isMounted = false; };
-  }, []);
+  }, [activeCollection]);
 
   const filteredTours = (tours || []).filter(tour => tour.collectionId === activeCollection || !tour.collectionId) || [];
   const displayTours = filteredTours.length > 0 ? filteredTours : tours;
 
   const categories = [
     { 
-      id: 'mountain', 
-      title: t('catMountain') || "Tog' safari", 
-      desc: t('catMountainDesc') || "Zomin, Chimyon va Chorvoq", 
-      icon: Mountain, 
-      color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+      id: 'extreme', 
+      title: "Olov Sarguzashtlar", 
+      desc: "Eksklyuziv, qizg'in tog' va cho'l ekspeditsiyalari", 
+      icon: Flame, 
+      color: "bg-rose-500/10 text-rose-600 dark:text-rose-400" 
+    },
+    { 
+      id: 'upcoming', 
+      title: "Tezkor jamoa", 
+      desc: "Tez yig'iladigan va yaqin kunlardagi guruhli safarlar", 
+      icon: Users, 
+      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
     },
     { 
       id: 'historical', 
-      title: t('catHistorical') || "Tarixiy shaharlar", 
-      desc: t('catHistoricalDesc') || "Samarqand, Buxoro, Xiva", 
+      title: "Tarixiy shaharlar", 
+      desc: "Samarqand, Buxoro, Xiva bo'ylab madaniy turlar", 
       icon: Landmark, 
       color: "bg-amber-500/10 text-amber-600 dark:text-amber-400" 
     },
     { 
       id: 'gastronomic', 
-      title: t('catGastronomic') || "Gastronomik", 
-      desc: t('catGastronomicDesc') || "Milliy taomlar va osh festivallari", 
+      title: "Gastronomik turlar", 
+      desc: "Milliy taomlar va mahorat darslari", 
       icon: Utensils, 
       color: "bg-orange-500/10 text-orange-600 dark:text-orange-400" 
     },
-    { 
-      id: 'extreme', 
-      title: t('catExtreme') || "Ekstremal", 
-      desc: t('catExtremeDesc') || "Kvadrotsikl va kemping", 
-      icon: Flame, 
-      color: "bg-rose-500/10 text-rose-600 dark:text-rose-400" 
-    },
-  ];
-
-  const trustElements = [
-    {
-      icon: ShieldCheck,
-      title: t('trustGuides') || "Rasmiy gidlar",
-      desc: t('trustGuidesDesc') || "Sertifikatlangan va tajribali ekspertlar"
-    },
-    {
-      icon: CreditCard,
-      title: t('trustPayment') || "100% Xavfsiz to'lov",
-      desc: t('trustPaymentDesc') || "Click, Payme va barcha xalqaro kartalar"
-    },
-    {
-      icon: Headphones,
-      title: t('trustSupport') || "24/7 Qo'llab-quvvatlash",
-      desc: t('trustSupportDesc') || "Sayohat davomida doimiy yordam"
-    },
-    {
-      icon: CalendarCheck,
-      title: t('trustGuaranteed') || "Kafolatlangan chiqishlar",
-      desc: t('trustGuaranteedDesc') || "Guruh holatidan qat'i nazar safar tayyor"
-    }
   ];
 
   return (
@@ -216,18 +188,15 @@ function AppContent() {
           <>
             {/* 1. Hero Section - Vibrant Uzbekistan Landscape */}
             <section className="relative min-h-[500px] sm:min-h-[560px] flex items-center justify-center px-4 pt-16 pb-20 sm:px-6 lg:px-8 overflow-hidden">
-              {/* Background Scenery Image with Gradient Overlays */}
               <div className="absolute inset-0 z-0">
                 <img 
                   src="https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=1920&q=85" 
                   alt="Registan Samarkand Uzbekistan" 
                   className="h-full w-full object-cover object-center transform scale-105 transition-transform duration-1000"
                 />
-                {/* Light/Dark Overlay for text readability without being too dark */}
                 <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/65 via-neutral-950/45 to-neutral-950/85" />
               </div>
 
-              {/* Hero Content */}
               <div className="relative z-10 mx-auto max-w-5xl text-center w-full">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-semibold mb-6 shadow-sm">
                   <Sparkles className="h-3.5 w-3.5 text-amber-300" />
@@ -242,22 +211,21 @@ function AppContent() {
                   {t('heroDesc') || "O'zbekistonning boy tarixi, noyob madaniyati va betakror tabiatini professional gidlar va qulay turlar bilan kashf eting."}
                 </p>
                 
-                {/* Centralized SearchBar */}
                 <div className="w-full">
                   <SearchBar />
                 </div>
               </div>
             </section>
 
-            {/* 2. Categories Section (Minimalist Cards & Hover Effects) */}
+            {/* 2. Categories Section (Clean Uzbek titles & descriptions) */}
             <section className="mx-auto max-w-7xl px-4 py-12 sm:py-16 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                    {t('categoriesTitle') || "Sayohat yo'nalishlari"}
+                    Sayohat toifalari
                   </h2>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                    Qiziqishingizga mos keluvchi tur toifasini tanlang
+                    Qiziqishingizga mos toifani tanlang
                   </p>
                 </div>
               </div>
@@ -289,7 +257,7 @@ function AppContent() {
               </div>
             </section>
 
-            {/* 3. Popular Tours Section (Whitespace py-12/py-16) */}
+            {/* 3. Popular Tours Section (Filterable Collections) */}
             <section className="mx-auto max-w-7xl px-4 py-12 sm:py-16 sm:px-6 lg:px-8 border-t border-neutral-100 dark:border-neutral-800">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
@@ -334,32 +302,6 @@ function AppContent() {
                 </div>
               )}
             </section>
-
-            {/* 4. Trust Elements Section */}
-            <section className="bg-neutral-50 dark:bg-neutral-800/40 border-y border-neutral-200/60 dark:border-neutral-800 py-12 sm:py-16">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {trustElements.map((item, idx) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <div key={idx} className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                          <IconComponent className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h4 className="text-base font-bold text-neutral-900 dark:text-white mb-1">
-                            {item.title}
-                          </h4>
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
           </>
           } />
           
@@ -368,7 +310,6 @@ function AppContent() {
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/my-trips" element={<MyTripsPage />} />
-          <Route path="/chat" element={<ChatPage />} />
           <Route path="/custom-tour" element={<CustomTourPage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/profile" element={<ProfilePage />} />

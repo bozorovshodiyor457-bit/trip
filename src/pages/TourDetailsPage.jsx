@@ -364,15 +364,6 @@ export default function TourDetailsPage() {
             >
               Bron qilish ({calculatedTotalPrice.toLocaleString('uz-UZ')} so'm)
             </button>
-            
-            <button 
-              onClick={handleAskQuestion}
-              disabled={isChatStarting}
-              className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white font-bold text-sm py-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
-            >
-              {isChatStarting ? <Loader2 className="h-5 w-5 animate-spin text-emerald-600" /> : <MessageCircle className="h-5 w-5" />} 
-              Savol berish
-            </button>
 
             <p className="text-center text-xs text-neutral-400 dark:text-neutral-500 mt-4">Sizdan hozir pul yechilmaydi</p>
           </div>
