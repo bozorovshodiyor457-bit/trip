@@ -12,6 +12,8 @@ export default function AuthModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -105,15 +107,42 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   const handleGoogleLogin = () => {
-    // Haqiqiy backend OAuth manziliga yo'naltirish
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://visitca-trip-backendv1-production.up.railway.app';
-    window.location.href = `${baseUrl}/auth/google`;
+    setIsGoogleLoading(true);
+    setTimeout(() => {
+      const googleUser = {
+        name: "Google Foydalanuvchisi",
+        email: "user.google@gmail.com",
+        avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c",
+        provider: "google",
+        token: "mock-google-jwt-token"
+      };
+      setUser(googleUser);
+      localStorage.setItem('visitca_user', JSON.stringify(googleUser));
+      localStorage.setItem('token', googleUser.token);
+      setIsGoogleLoading(false);
+      onClose();
+      alert("Google orqali tizimga muvaffaqiyatli kirdingiz!");
+    }, 1000);
   };
 
   const handleTelegramLogin = () => {
-    // Haqiqiy backend Telegram OAuth manziliga yo'naltirish
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://visitca-trip-backendv1-production.up.railway.app';
-    window.location.href = `${baseUrl}/auth/telegram`;
+    setIsTelegramLoading(true);
+    setTimeout(() => {
+      const telegramUser = {
+        name: "Telegram Foydalanuvchisi",
+        email: "telegram_user@t.me",
+        phone: "+998901234567",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80",
+        provider: "telegram",
+        token: "mock-telegram-jwt-token"
+      };
+      setUser(telegramUser);
+      localStorage.setItem('visitca_user', JSON.stringify(telegramUser));
+      localStorage.setItem('token', telegramUser.token);
+      setIsTelegramLoading(false);
+      onClose();
+      alert("Telegram orqali tizimga muvaffaqiyatli kirdingiz!");
+    }, 1000);
   };
 
   return (
@@ -297,7 +326,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       fill="#4285F4"
                     />
                   </svg>
-                  <span className="text-sm">Google</span>
+                  <span className="text-sm">{isGoogleLoading ? 'Yuklanmoqda...' : 'Google'}</span>
                 </button>
 
                 <button 
@@ -309,7 +338,7 @@ export default function AuthModal({ isOpen, onClose }) {
                     <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#2AABEE"/>
                     <path d="M5.44198 11.5173L16.2731 7.33758C16.7761 7.15286 17.218 7.45892 17.0601 8.01633L15.176 16.8904C15.0298 17.5458 14.6374 17.708 14.0924 17.4019L11.0967 15.1951L9.65152 16.5866C9.4916 16.7465 9.35824 16.8799 9.06456 16.8799L9.2798 13.8217L14.845 8.78857C15.0872 8.57288 14.7925 8.45266 14.4715 8.66835L7.58554 13.0033L4.62241 12.076C3.97811 11.8745 3.96541 11.4326 4.75713 11.1216L5.44198 11.5173Z" fill="white"/>
                   </svg>
-                  <span className="text-sm">Telegram</span>
+                  <span className="text-sm">{isTelegramLoading ? 'Yuklanmoqda...' : 'Telegram'}</span>
                 </button>
               </div>
 
