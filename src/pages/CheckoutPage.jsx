@@ -19,8 +19,9 @@ export default function CheckoutPage() {
   const [children, setChildren] = useState(0);
   const [extras, setExtras] = useState({ transfer: false, lunch: false });
 
-  // Step 2 State
+  // Step 2 State & Validation
   const [participants, setParticipants] = useState([{ name: '', dob: '', passport: '' }]);
+  const [participantErrors, setParticipantErrors] = useState([]);
 
   // Step 3 State
   const [promo, setPromo] = useState('');
@@ -41,6 +42,7 @@ export default function CheckoutPage() {
       while (newParts.length < totalPeople) newParts.push({ name: '', dob: '', passport: '' });
       while (newParts.length > totalPeople) newParts.pop();
       setParticipants(newParts);
+      setParticipantErrors([]);
     }
   }, [adults, children]);
 
@@ -55,6 +57,54 @@ export default function CheckoutPage() {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
+  };
+
+  // Step 2 Validation Function
+  const validateStep2 = () => {
+    const errors = [];
+    let isValid = true;
+    let firstErrorId = null;
+
+    participants.forEach((p, idx) => {
+      const pErr = {};
+      const nameVal = String(p.name || '').trim();
+      const dobVal = String(p.dob || '').trim();
+      const passportVal = String(p.passport || '').replace(/\s+/g, '').trim();
+
+      if (!nameVal || nameVal.length < 3) {
+        pErr.name = "F.I.Sh. kiritilishi shart (kamida 3 ta harf)";
+        isValid = false;
+        if (!firstErrorId) firstErrorId = `participant-${idx}-name`;
+      }
+
+      if (!dobVal) {
+        pErr.dob = "Tug'ilgan sanani tanlang";
+        isValid = false;
+        if (!firstErrorId) firstErrorId = `participant-${idx}-dob`;
+      }
+
+      if (!passportVal || passportVal.length < 7) {
+        pErr.passport = "Pasport/ID seriyasi va raqamini kiriting (masalan: AA1234567)";
+        isValid = false;
+        if (!firstErrorId) firstErrorId = `participant-${idx}-passport`;
+      }
+
+      errors.push(pErr);
+    });
+
+    setParticipantErrors(errors);
+
+    if (!isValid && firstErrorId) {
+      setTimeout(() => {
+        const el = document.getElementById(firstErrorId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.focus();
+        }
+      }, 50);
+    }
+
+    return isValid;
   };
 
   const handleNext = async () => {
@@ -74,6 +124,13 @@ export default function CheckoutPage() {
         setIsLoading(false);
       }
     }
+
+    // STRICT STEP 2 VALIDATION: STOP IF INVALID
+    if (step === 2) {
+      const isValid = validateStep2();
+      if (!isValid) return; // DO NOT ADVANCE TO STEP 3!
+    }
+
     setStep(prev => Math.min(prev + 1, 4));
   };
 
@@ -83,6 +140,15 @@ export default function CheckoutPage() {
     const newP = [...participants];
     newP[index][field] = value;
     setParticipants(newP);
+
+    // Dynamically clear error for edited field
+    if (participantErrors[index]?.[field]) {
+      const newErrs = [...participantErrors];
+      if (newErrs[index]) {
+        newErrs[index] = { ...newErrs[index], [field]: undefined };
+      }
+      setParticipantErrors(newErrs);
+    }
   };
 
   const applyPromo = async (e) => {
@@ -241,25 +307,69 @@ export default function CheckoutPage() {
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">Sug'urta va chiptalar rasmiylashtirilishi uchun pasport ma'lumotlarini aniq kiriting.</p>
               
               <div className="space-y-6">
-                {participants.map((p, i) => (
-                  <div key={i} className="p-5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-800/30">
-                    <h3 className="font-semibold text-neutral-900 dark:text-white mb-4">Ishtirokchi {i + 1}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase mb-1">F.I.Sh.</label>
-                        <input type="text" value={p.name} onChange={e => updateParticipant(i, 'name', e.target.value)} placeholder="Toshmatov Eshmat" className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:focus:border-emerald-500 text-neutral-900 dark:text-white" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase mb-1">Tug'ilgan sana</label>
-                        <input type="date" value={p.dob} onChange={e => updateParticipant(i, 'dob', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:focus:border-emerald-500 text-neutral-900 dark:text-white" />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase mb-1">Pasport / ID seriya va raqam</label>
-                        <input type="text" value={p.passport} onChange={e => updateParticipant(i, 'passport', e.target.value)} placeholder="AA 1234567" className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm outline-none focus:border-emerald-500 dark:focus:border-emerald-500 uppercase text-neutral-900 dark:text-white" />
+                {participants.map((p, i) => {
+                  const errs = participantErrors[i] || {};
+                  return (
+                    <div key={i} className="p-5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-800/30">
+                      <h3 className="font-semibold text-neutral-900 dark:text-white mb-4">Ishtirokchi {i + 1}</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase mb-1">F.I.Sh.</label>
+                          <input 
+                            id={`participant-${i}-name`}
+                            type="text" 
+                            value={p.name} 
+                            onChange={e => updateParticipant(i, 'name', e.target.value)} 
+                            placeholder="Toshmatov Eshmat" 
+                            className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
+                              errs.name 
+                                ? 'border-red-500 bg-red-50/20 dark:border-red-600 dark:bg-red-950/20 text-red-900 dark:text-red-100 placeholder-red-300' 
+                                : 'border-neutral-300 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white focus:border-emerald-500 dark:focus:border-emerald-500'
+                            }`} 
+                          />
+                          {errs.name && (
+                            <p className="text-xs font-semibold text-red-500 dark:text-red-400 mt-1 leading-snug">{errs.name}</p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase mb-1">Tug'ilgan sana</label>
+                          <input 
+                            id={`participant-${i}-dob`}
+                            type="date" 
+                            value={p.dob} 
+                            onChange={e => updateParticipant(i, 'dob', e.target.value)} 
+                            className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
+                              errs.dob 
+                                ? 'border-red-500 bg-red-50/20 dark:border-red-600 dark:bg-red-950/20 text-red-900 dark:text-red-100' 
+                                : 'border-neutral-300 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white focus:border-emerald-500 dark:focus:border-emerald-500'
+                            }`} 
+                          />
+                          {errs.dob && (
+                            <p className="text-xs font-semibold text-red-500 dark:text-red-400 mt-1 leading-snug">{errs.dob}</p>
+                          )}
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase mb-1">Pasport / ID seriya va raqam</label>
+                          <input 
+                            id={`participant-${i}-passport`}
+                            type="text" 
+                            value={p.passport} 
+                            onChange={e => updateParticipant(i, 'passport', e.target.value)} 
+                            placeholder="AA 1234567" 
+                            className={`w-full rounded-lg border px-3 py-2 text-sm outline-none uppercase transition-colors ${
+                              errs.passport 
+                                ? 'border-red-500 bg-red-50/20 dark:border-red-600 dark:bg-red-950/20 text-red-900 dark:text-red-100 placeholder-red-300' 
+                                : 'border-neutral-300 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white focus:border-emerald-500 dark:focus:border-emerald-500'
+                            }`} 
+                          />
+                          {errs.passport && (
+                            <p className="text-xs font-semibold text-red-500 dark:text-red-400 mt-1 leading-snug">{errs.passport}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
