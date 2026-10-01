@@ -12,15 +12,16 @@ export default function TourCard({ tour = {} }) {
   const isFav = favorites?.some(f => (f._id || f.id) === tourId);
 
   // Extract city name (e.g., "Samarqand" from "Samarqand, O'zbekiston")
-  const cityName = tour.city || (tour.location ? tour.location.split(',')[0] : "O'zbekiston");
+  const cityName = tour.city || tour.destination || (tour.location ? String(tour.location).split(',')[0] : "O'zbekiston");
 
   // Format price strictly in UZS (so'm)
-  const priceVal = tour.priceUZS || tour.price || 450000;
+  const priceVal = tour.priceUZS || tour.price || tour.price_from || tour.minPrice || 450000;
   const formattedPrice = `${Number(priceVal).toLocaleString('uz-UZ')} so'm`;
 
   // Format duration representation
   const durationText = tour.durationDetails || tour.duration || tour.durationStr || "2 kun / 1 kecha";
-  const imageSrc = tour.image || tour.images?.[0] || "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=800&q=80";
+  const imageSrc = tour.image || tour.cover_image || tour.image_url || tour.thumbnail || tour.images?.[0] || "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=800&q=80";
+  const tourTitle = tour.title || tour.name || "Sayohat turi";
 
   return (
     <div 
@@ -32,7 +33,7 @@ export default function TourCard({ tour = {} }) {
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
         <img 
           src={imageSrc} 
-          alt={tour.title || "Tour image"} 
+          alt={tourTitle} 
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
@@ -50,7 +51,7 @@ export default function TourCard({ tour = {} }) {
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
           <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-neutral-900 dark:text-white shadow-sm flex items-center gap-1">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" />
-            <span>{tour.rating || 4.9}</span>
+            <span>{tour.rating || tour.rating_avg || 4.9}</span>
           </div>
 
           <button 
@@ -71,7 +72,7 @@ export default function TourCard({ tour = {} }) {
       <div className="p-4 flex flex-col justify-between flex-1">
         <div>
           <h3 className="font-bold text-base text-neutral-900 dark:text-white line-clamp-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug min-h-[2.75rem]">
-            {tour.title || "Sayohat turi"}
+            {tourTitle}
           </h3>
 
           <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-2">
