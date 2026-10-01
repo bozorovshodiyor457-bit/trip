@@ -29,6 +29,10 @@ const bookingService = {
     }
   },
 
+  getBookingDetails: async (id) => {
+    return await bookingService.getBookingById(id);
+  },
+
   /**
    * POST /api/b2c/bookings/:id/pay
    * initiatePayment(bookingId, paymentMethod = 'cardsystem')
@@ -56,7 +60,7 @@ const bookingService = {
    * Legacy wrapper for payBooking
    */
   payBooking: async (id, payload = {}) => {
-    const method = payload.payment_method || payload.provider || 'cardsystem';
+    const method = typeof payload === 'string' ? payload : (payload.payment_method || payload.provider || 'cardsystem');
     return await bookingService.initiatePayment(id, method);
   },
 
@@ -82,6 +86,10 @@ const bookingService = {
   /**
    * Alias for mockPayment
    */
+  mockPayBooking: async (id) => {
+    return await bookingService.mockPayment(id);
+  },
+
   payMockBooking: async (id) => {
     return await bookingService.mockPayment(id);
   },

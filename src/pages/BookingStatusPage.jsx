@@ -150,30 +150,43 @@ export default function BookingStatusPage() {
                   <div>
                     <span className="block text-neutral-500 text-xs mb-1">{t('date') || "Sana"}</span>
                     <span className="font-bold text-neutral-900 dark:text-white">
-                      {bookingData?.date || "24 Oktabr 2026, 08:00"}
+                      {bookingData?.date || voucherData?.date || "24 Oktabr 2026, 08:00"}
                     </span>
                   </div>
                   <div>
                     <span className="block text-neutral-500 text-xs mb-1">{t('peopleCount') || "Mehmonlar"}</span>
                     <span className="font-bold text-neutral-900 dark:text-white">
-                      {bookingData?.adultCount ? `${bookingData.adultCount} kattalar` : "2 ta kattalar"}
+                      {bookingData?.adultCount ? `${bookingData.adultCount} kattalar${bookingData.childCount ? `, ${bookingData.childCount} bolalar` : ''}` : "2 ta kattalar"}
                     </span>
                   </div>
                   <div className="col-span-2">
                     <span className="block text-neutral-500 text-xs mb-1">Tur yo'nalishi</span>
                     <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                      {bookingData?.tourTitle || "Afsonaviy Samarqand bo'ylab 2 kunlik sayohat"}
+                      {bookingData?.tourTitle || voucherData?.tourName || "Afsonaviy Samarqand bo'ylab 2 kunlik sayohat"}
                     </span>
                   </div>
+                  {(bookingData?.participants?.length > 0 || voucherData?.participants?.length > 0) && (
+                    <div className="col-span-2 border-t border-neutral-200 dark:border-neutral-800 pt-3">
+                      <span className="block text-neutral-500 text-xs mb-1">Ishtirokchilar:</span>
+                      <div className="space-y-1">
+                        {(bookingData?.participants || voucherData?.participants || []).map((p, pIdx) => (
+                          <div key={pIdx} className="flex justify-between text-xs text-neutral-700 dark:text-neutral-300">
+                            <span>{p.name || p.fullName}</span>
+                            <span className="font-mono text-neutral-500">{p.passport || p.passportNumber}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="flex flex-col gap-3">
                 <button 
-                  onClick={() => alert("Vaucher PDF formatida yuklanmoqda...")}
+                  onClick={() => window.print()}
                   className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
                 >
-                  <Download className="h-5 w-5" /> {t('openVoucher') || "Vaucherni yuklab olish"}
+                  <Download className="h-5 w-5" /> {t('openVoucher') || "Vaucherni yuklab olish (PDF/Print)"}
                 </button>
                 <button 
                   onClick={() => navigate('/my-trips')}
