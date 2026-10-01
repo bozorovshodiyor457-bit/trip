@@ -37,8 +37,8 @@ export default function Header({ onLoginClick }) {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 relative">
+    <header className="sticky top-0 z-40 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 relative">
         
         <div className="flex items-center gap-3">
           {/* Mobile Menu Toggle */}
@@ -48,8 +48,8 @@ export default function Header({ onLoginClick }) {
 
           {/* Logo */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => { closeAllPopovers(); navigate('/'); }}>
-            <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-md" />
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Visitca Trip</span>
+            <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md" />
+            <span className="text-lg sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Visitca Trip</span>
           </div>
         </div>
 
@@ -160,9 +160,8 @@ export default function Header({ onLoginClick }) {
             )}
           </div>
 
-          {/* User / Login */}
           {user ? (
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <button
                 onClick={() => { const state = profileOpen; closeAllPopovers(); setProfileOpen(!state); }}
                 className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
@@ -204,7 +203,7 @@ export default function Header({ onLoginClick }) {
           ) : (
             <button
               onClick={onLoginClick}
-              className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+              className="hidden sm:flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
               <UserIcon className="h-4 w-4" />
               {t('nav.login')}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, MapPin, Calendar, Users, Plus, Minus } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, Plus, Minus, X } from 'lucide-react';
 
 export default function SearchBar() {
   const [activeInput, setActiveInput] = useState(null); // 'location', 'date', 'guests'
@@ -10,6 +10,8 @@ export default function SearchBar() {
   const searchBarRef = useRef(null);
 
   const destinations = ['Samarqand', 'Buxoro', 'Xiva', 'Zomin', 'Toshkent', 'Farg\'ona'];
+
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -22,7 +24,112 @@ export default function SearchBar() {
   }, []);
 
   return (
-    <div className="relative mx-auto max-w-4xl w-full px-2 sm:px-0" ref={searchBarRef}>
+    <>
+    {/* Mobile Fake Search Button */}
+    <div className="sm:hidden px-4 mb-4" onClick={() => setIsMobileModalOpen(true)}>
+      <div className="flex items-center gap-3 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 shadow-sm">
+        <Search className="h-5 w-5 text-neutral-900 dark:text-white" />
+        <div className="flex flex-col items-start">
+          <span className="text-sm font-semibold text-neutral-900 dark:text-white">
+            {location || 'Qayerga bormoqchisiz?'}
+          </span>
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            15 Okt - 20 Okt • {adults + children} mehmon
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* Mobile Search Modal (Bottom Sheet) */}
+    {isMobileModalOpen && (
+      <div className="fixed inset-0 z-50 flex items-end sm:hidden bg-black/40 backdrop-blur-sm">
+        <div className="w-full bg-neutral-100 dark:bg-neutral-900 rounded-t-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+            <button onClick={() => setIsMobileModalOpen(false)} className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Minus className="h-6 w-6 text-neutral-900 dark:text-white" /> {/* X icon replacement if X is not imported, let's just use CSS or import X from lucide-react */}
+            </button>
+            <span className="font-bold text-neutral-900 dark:text-white">Qidiruv</span>
+            <div className="w-10"></div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Where to */}
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm">
+              <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">Qayerga?</h3>
+              <div className="relative border border-neutral-200 dark:border-neutral-700 rounded-xl px-4 py-3 flex items-center mb-4">
+                <Search className="h-5 w-5 text-neutral-400 mr-2" />
+                <input 
+                  type="text" 
+                  className="w-full bg-transparent outline-none text-neutral-900 dark:text-white"
+                  placeholder="Shahar yoki mehmonxona"
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                {destinations.map(dest => (
+                  <button key={dest} onClick={() => setLocation(dest)} className="px-4 py-2 border border-neutral-200 dark:border-neutral-700 rounded-full text-sm whitespace-nowrap text-neutral-700 dark:text-neutral-300">
+                    {dest}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* When */}
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm">
+              <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Qachon?</h3>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">15 Okt - 20 Okt</p>
+            </div>
+
+            {/* Who */}
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm space-y-4">
+              <h3 className="text-xl font-bold text-neutral-900 dark:text-white">Kimlar?</h3>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-base font-semibold text-neutral-900 dark:text-white">Kattalar</h4>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">13 va undan katta</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setAdults(Math.max(1, adults - 1))} className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-neutral-900 dark:hover:border-white hover:text-neutral-900 dark:hover:text-white disabled:opacity-30">
+                    <Minus className="h-5 w-5" />
+                  </button>
+                  <span className="w-4 text-center text-lg font-medium text-neutral-900 dark:text-white">{adults}</span>
+                  <button onClick={() => setAdults(adults + 1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-neutral-900 dark:hover:border-white hover:text-neutral-900 dark:hover:text-white">
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <h4 className="text-base font-semibold text-neutral-900 dark:text-white">Bolalar</h4>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">2-12 yosh</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setChildren(Math.max(0, children - 1))} className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-neutral-900 dark:hover:border-white hover:text-neutral-900 dark:hover:text-white disabled:opacity-30">
+                    <Minus className="h-5 w-5" />
+                  </button>
+                  <span className="w-4 text-center text-lg font-medium text-neutral-900 dark:text-white">{children}</span>
+                  <button onClick={() => setChildren(children + 1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-neutral-900 dark:hover:border-white hover:text-neutral-900 dark:hover:text-white">
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between pb-[env(safe-area-inset-bottom)]">
+            <button onClick={() => { setLocation(''); setAdults(2); setChildren(0); }} className="text-sm font-semibold text-neutral-900 dark:text-white underline">Tozalash</button>
+            <button onClick={() => setIsMobileModalOpen(false)} className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-base font-bold text-white shadow-sm hover:bg-emerald-700">
+              <Search className="h-5 w-5" /> Qidirish
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Desktop Search Bar */}
+    <div className="hidden sm:block relative mx-auto max-w-4xl w-full px-2 sm:px-0" ref={searchBarRef}>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center rounded-3xl sm:rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl transition-shadow sm:divide-x divide-y sm:divide-y-0 divide-neutral-200 dark:divide-neutral-700 w-full overflow-hidden sm:overflow-visible relative">
         
         {/* Where to? */}
@@ -133,5 +240,6 @@ export default function SearchBar() {
         </div>
       </div>
     </div>
+    </>
   );
 }

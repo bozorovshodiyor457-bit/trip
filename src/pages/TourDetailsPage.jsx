@@ -49,7 +49,7 @@ export default function TourDetailsPage() {
   const [openDay, setOpenDay] = useState(0);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 pb-32 sm:pb-8">
       {/* Header Actions */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-neutral-900 dark:text-white leading-tight">
@@ -82,10 +82,15 @@ export default function TourDetailsPage() {
       </div>
 
       {/* Gallery */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-10 h-auto md:h-[400px] lg:h-[480px] rounded-2xl overflow-hidden">
-        <div className="md:col-span-2 h-64 md:h-full relative group cursor-pointer">
-          <img src={MOCK_TOUR.images[0]} alt="Gallery 1" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <div className="flex md:grid md:grid-cols-4 gap-2 mb-10 h-64 md:h-[400px] lg:h-[480px] rounded-2xl overflow-x-auto snap-x snap-mandatory no-scrollbar md:overflow-hidden">
+        <div className="flex-shrink-0 w-full sm:w-auto md:col-span-2 h-64 md:h-full relative group cursor-pointer snap-start">
+          <img src={MOCK_TOUR.images[0]} alt="Gallery 1" className="h-full w-full object-cover md:transition-transform md:duration-500 group-hover:scale-105" />
         </div>
+        {MOCK_TOUR.images.slice(1).map((img, idx) => (
+          <div key={idx} className="flex-shrink-0 w-full md:hidden h-full relative snap-start">
+            <img src={img} alt={`Gallery mobile ${idx + 2}`} className="h-full w-full object-cover" />
+          </div>
+        ))}
         <div className="hidden md:grid grid-rows-2 gap-2 h-full">
           <div className="h-full relative group cursor-pointer overflow-hidden"><img src={MOCK_TOUR.images[1]} alt="Gallery 2" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
           <div className="h-full relative group cursor-pointer overflow-hidden"><img src={MOCK_TOUR.images[2]} alt="Gallery 3" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
@@ -259,7 +264,7 @@ export default function TourDetailsPage() {
 
             <button 
               onClick={() => navigate('/checkout')}
-              className="w-full bg-emerald-600 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md mb-3"
+              className="hidden sm:block w-full bg-emerald-600 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md mb-3"
             >
               Bron qilish
             </button>
@@ -271,6 +276,18 @@ export default function TourDetailsPage() {
             <p className="text-center text-xs text-neutral-400 dark:text-neutral-500 mt-4">Sizdan hozir pul yechilmaydi</p>
           </div>
         </div>
+      {/* Mobile Sticky CTA */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center">
+        <div>
+          <span className="text-xl font-bold text-neutral-900 dark:text-white">{MOCK_TOUR.priceUZS.toLocaleString('uz-UZ')}</span>
+          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block">so'm / kishi</span>
+        </div>
+        <button 
+          onClick={() => navigate('/checkout')}
+          className="bg-emerald-600 text-white font-bold text-base py-3 px-6 rounded-xl hover:bg-emerald-700 transition-colors shadow-md"
+        >
+          Bron qilish
+        </button>
       </div>
     </div>
   );

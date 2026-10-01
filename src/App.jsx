@@ -5,6 +5,7 @@ import AuthModal from './components/AuthModal';
 import { useAppContext } from './context/AppProvider';
 import { useTranslation } from './utils/i18n';
 import SearchBar from './components/SearchBar';
+import BottomNav from './components/BottomNav';
 import TourCard from './components/TourCard';
 import SearchPage from './pages/SearchPage';
 import TourDetailsPage from './pages/TourDetailsPage';
@@ -86,7 +87,7 @@ function AppContent() {
         onLoginClick={() => setIsAuthModalOpen(true)} 
       />
       
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         <Routes>
           <Route path="/" element={
           <>
@@ -108,13 +109,13 @@ function AppContent() {
             </section>
 
             {/* Collections Section */}
-            <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-              <div className="flex flex-wrap items-center gap-2 mb-10 overflow-x-auto no-scrollbar pb-2">
+            <section className="mx-auto max-w-7xl px-4 py-8 sm:py-16 sm:px-6 lg:px-8">
+              <div className="flex sm:flex-wrap items-center gap-2 mb-6 sm:mb-10 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory">
                 {MOCK_COLLECTIONS.map(collection => (
                   <button
                     key={collection.id}
                     onClick={() => setActiveCollection(collection.id)}
-                    className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`snap-start whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition-colors flex-shrink-0 ${
                       activeCollection === collection.id 
                         ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-md' 
                         : 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-neutral-900 dark:hover:border-white'
@@ -152,7 +153,7 @@ function AppContent() {
       </main>
 
       {/* Footer Placeholder */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 py-12 mt-auto transition-colors">
+      <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 py-12 pb-24 md:pb-12 mt-auto transition-colors">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4">
             <img src="/triplogo.jpg" alt="Visitca Trip Logo" className="h-8 w-8 object-contain rounded-md" />
@@ -166,6 +167,8 @@ function AppContent() {
       </footer>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      
+      <BottomNav />
     </div>
   );
 }
