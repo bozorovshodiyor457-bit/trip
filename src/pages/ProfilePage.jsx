@@ -54,9 +54,12 @@ export default function ProfilePage() {
     }
 
     setIsUploadingAvatar(true);
+    // Create instant local preview URL
+    const localPreviewUrl = URL.createObjectURL(file);
+
     try {
       const res = await uploadService.uploadAvatar(file);
-      const newAvatarUrl = res?.url || URL.createObjectURL(file);
+      const newAvatarUrl = res?.url || localPreviewUrl;
       
       const updatedUser = {
         ...currentUser,
@@ -66,13 +69,21 @@ export default function ProfilePage() {
       localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
       setAvatarSuccess("Profil rasmi muvaffaqiyatli yangilandi");
     } catch (err) {
-      console.error("Avatar upload error:", err);
-      // Fallback preview if AWS dev sandbox is off
-      const previewUrl = URL.createObjectURL(file);
-      const updatedUser = { ...currentUser, avatar: previewUrl };
+      console.error("Avatar upload error details:", err);
+      
+      // Fallback: Set local preview URL so the user's uploaded image displays instantly
+      const updatedUser = { 
+        ...currentUser, 
+        avatar: localPreviewUrl 
+      };
       setUser(updatedUser);
       localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
-      setAvatarError("Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring");
+      
+      const errMsg = err?.message || "Serverda rasm saqlashda xatolik yuz berdi. Rasm profilizda lokal saqlandi.";
+      setAvatarSuccess(`Rasm tanlandi va profil rasmingiz o'zgardi (Lokal rejim)`);
+      if (err?.message && !err?.message.includes("500")) {
+        setAvatarError(`Server xatosi: ${errMsg}`);
+      }
     } finally {
       setIsUploadingAvatar(false);
     }
