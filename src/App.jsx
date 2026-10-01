@@ -217,12 +217,33 @@ function AppContent() {
 
               {/* Tour Cards Grid */}
               {isToursLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="animate-pulse rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 h-80 flex flex-col justify-between">
+                      <div className="w-full h-48 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                      <div className="space-y-2 mt-4">
+                        <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-3/4" />
+                        <div className="h-3 bg-neutral-200 dark:bg-neutral-800 rounded w-1/2" />
+                      </div>
+                      <div className="h-5 bg-neutral-200 dark:bg-neutral-800 rounded w-1/3 mt-4" />
+                    </div>
+                  ))}
+                </div>
+              ) : displayTours.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-neutral-50 dark:bg-neutral-800/40 rounded-3xl border border-dashed border-neutral-200 dark:border-neutral-700">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4 shadow-sm">
+                    <Sparkles className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-1">
+                    Hozircha faol turlar topilmadi
+                  </h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-md">
+                    Yaqin orada yangi yo'nalishlar va qiziqarli safarlar qo'shiladi.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {(displayTours || []).map((tour) => (
+                  {displayTours.map((tour) => (
                     <div key={tour._id || tour.id} onClick={() => navigate(`/tour/${tour._id || tour.id}`)}>
                       <TourCard tour={tour} />
                     </div>

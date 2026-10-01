@@ -1,36 +1,7 @@
-import React, { useState } from 'react';
-import { ChevronRight, Smartphone, X, Star, MapPin, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, Smartphone, X, Star, MapPin, Clock, ChevronDown, ChevronUp, Sparkles, Loader2 } from 'lucide-react';
 import TourCard from '../components/TourCard';
-
-const MOCK_TOURS = [
-  {
-    id: 1,
-    title: "Afsonaviy Samarqand bo'ylab sayohat",
-    location: "Samarqand, O'zbekiston",
-    image: "https://picsum.photos/seed/tour15/800/600",
-    rating: 4.9,
-    priceUZS: 450000,
-    duration: "2 kun",
-  },
-  {
-    id: 5,
-    title: "Registon va Gur-Amir sirlari",
-    location: "Samarqand",
-    image: "https://picsum.photos/seed/tour16/800/600",
-    rating: 4.8,
-    priceUZS: 250000,
-    duration: "3 soat",
-  },
-  {
-    id: 6,
-    title: "Siyob bozori va xalq hunarmandchiligi",
-    location: "Samarqand",
-    image: "https://picsum.photos/seed/tour17/800/600",
-    rating: 4.7,
-    priceUZS: 180000,
-    duration: "4 soat",
-  }
-];
+import tourService from '../services/tourService';
 
 const SEO_FAQS = [
   {
@@ -50,6 +21,28 @@ const SEO_FAQS = [
 export default function SeoDestinationPage() {
   const [showBanner, setShowBanner] = useState(true);
   const [openFaq, setOpenFaq] = useState(null);
+  const [tours, setTours] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        setIsLoading(true);
+        const res = await tourService.getTours({ search: 'Samarqand' });
+        if (isMounted) {
+          const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
+          setTours(list);
+        }
+      } catch (err) {
+        if (isMounted) setTours([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadData();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleOpenApp = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -58,7 +51,6 @@ export default function SeoDestinationPage() {
     } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
       window.open("https://apps.apple.com/uz/app/visitca-uz/id6738866179", "_blank");
     } else {
-      // Default to Play store for desktop/other
       window.open("https://play.google.com/store/apps/details?id=uz.purecube.visitca", "_blank");
     }
   };
@@ -121,11 +113,23 @@ export default function SeoDestinationPage() {
 
         {/* Tours Grid */}
         <h2 className="text-2xl font-bold text-neutral-900 mb-6">Samarqanddagi mashhur turlar</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-16">
-          {MOCK_TOURS.map((tour) => (
-            <TourCard key={tour.id} tour={tour} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+          </div>
+        ) : tours.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-neutral-50 rounded-3xl border border-dashed border-neutral-200 mb-16">
+            <Sparkles className="h-8 w-8 text-emerald-600 mb-4" />
+            <h3 className="text-lg font-bold text-neutral-900 mb-1">Hozircha faol turlar topilmadi</h3>
+            <p className="text-sm text-neutral-500 max-w-md">Yaqin orada yangi yo'nalishlar qo'shiladi.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-16">
+            {tours.map((tour) => (
+              <TourCard key={tour._id || tour.id} tour={tour} />
+            ))}
+          </div>
+        )}
 
         {/* SEO FAQ Section */}
         <div className="max-w-3xl mx-auto border-t border-neutral-200 pt-16 pb-12">

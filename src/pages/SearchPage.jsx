@@ -5,89 +5,18 @@ import { useAppContext } from '../context/AppProvider';
 import { useTranslation } from '../utils/i18n';
 import tourService from '../services/tourService';
 
-// Fallback Mock Tours for Search Page if API is empty
-const MOCK_TOURS = [
-  {
-    id: 1,
-    title: "Samarqand Buyuk Ipak Yo'li",
-    location: "Samarqand",
-    image: "https://picsum.photos/seed/tour5/800/600",
-    rating: 4.9,
-    priceUZS: 450000,
-    durationStr: "2 kun",
-    durationType: "multi_day",
-    format: "group",
-    organizerType: "operator",
-    isVerified: true,
-    languages: ["UZ", "RU"],
-    freeCancellation: true,
-    transferIncluded: true,
-    lat: 39.654, lng: 66.975,
-    popularity: 95
-  },
-  {
-    id: 2,
-    title: "Eski Buxoro ko'chalari bo'ylab yurish",
-    location: "Buxoro",
-    image: "https://picsum.photos/seed/tour6/800/600",
-    rating: 4.8,
-    priceUZS: 150000,
-    durationStr: "3 soat",
-    durationType: "hours",
-    format: "individual",
-    organizerType: "guide",
-    isVerified: true,
-    languages: ["UZ", "EN"],
-    freeCancellation: false,
-    transferIncluded: false,
-    lat: 39.774, lng: 64.413,
-    popularity: 88
-  },
-  {
-    id: 3,
-    title: "Ichan Qal'a arxitekturasi",
-    location: "Xiva",
-    image: "https://picsum.photos/seed/tour7/800/600",
-    rating: 4.4,
-    priceUZS: 250000,
-    durationStr: "1 kun",
-    durationType: "1_day",
-    format: "group",
-    organizerType: "operator",
-    isVerified: false,
-    languages: ["UZ", "RU", "EN"],
-    freeCancellation: true,
-    transferIncluded: true,
-    lat: 41.378, lng: 60.363,
-    popularity: 75
-  },
-  {
-    id: 4,
-    title: "Zomin tog'lari tabiati",
-    location: "Zomin",
-    image: "https://picsum.photos/seed/tour8/800/600",
-    rating: 4.7,
-    priceUZS: 320000,
-    durationStr: "1 kun",
-    durationType: "1_day",
-    format: "group",
-    organizerType: "operator",
-    isVerified: true,
-    languages: ["UZ", "RU"],
-    freeCancellation: true,
-    transferIncluded: true,
-    lat: 39.96, lng: 68.39,
-    popularity: 82
-  }
-];
+import TourCard from '../components/TourCard';
+import { Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function SearchPage() {
   const { language } = useAppContext();
   const t = useTranslation(language);
   const locationObj = useLocation();
+  const navigate = useNavigate();
   const [showMap, setShowMap] = useState(false);
   const [hoveredTourId, setHoveredTourId] = useState(null);
-  const [apiTours, setApiTours] = useState([]);
+  const [tours, setTours] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Parse URL Search Query Parameters
@@ -131,11 +60,11 @@ export default function SearchPage() {
         
         if (isMounted) {
           const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
-          setApiTours(list.length > 0 ? list : MOCK_TOURS);
+          setTours(list);
         }
       } catch (err) {
-        console.warn('SearchPage tour fetch error, using fallback:', err);
-        if (isMounted) setApiTours(MOCK_TOURS);
+        console.warn('SearchPage tour fetch error:', err);
+        if (isMounted) setTours([]);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -157,25 +86,24 @@ export default function SearchPage() {
 
   // Filter & Sort Logic
   const filteredTours = useMemo(() => {
-    const source = (apiTours && apiTours.length > 0) ? apiTours : MOCK_TOURS;
-    let result = source.filter(tour => {
+    let result = (tours || []).filter(tour => {
       if (searchKeyword) {
         const q = searchKeyword.toLowerCase();
-        const titleMatch = (tour.title || '').toLowerCase().includes(q);
-        const locMatch = (tour.location || tour.city || '').toLowerCase().includes(q);
+        const titleMatch = (tour.title || tour.name || '').toLowerCase().includes(q);
+        const locMatch = (tour.location || tour.city || tour.destination || '').toLowerCase().includes(q);
         if (!titleMatch && !locMatch) return false;
       }
       if (filters.format.length && tour.format && !filters.format.includes(tour.format)) return false;
       if (filters.organizerType.length && tour.organizerType && !filters.organizerType.includes(tour.organizerType)) return false;
       if (filters.durationType.length && tour.durationType && !filters.durationType.includes(tour.durationType)) return false;
       
-      const price = tour.priceUZS || tour.price || 0;
+      const price = tour.priceUZS || tour.price || tour.price_from || 0;
       const minP = parseFloat(filters.minPrice);
       const maxP = parseFloat(filters.maxPrice);
       if (!isNaN(minP) && price < minP) return false;
       if (!isNaN(maxP) && price > maxP) return false;
 
-      const rat = tour.rating || 5;
+      const rat = tour.rating || tour.rating_avg || 5;
       if (filters.rating && rat < filters.rating) return false;
       if (filters.freeCancellation && !tour.freeCancellation) return false;
       if (filters.transferIncluded && !tour.transferIncluded) return false;
@@ -184,12 +112,12 @@ export default function SearchPage() {
     });
 
     result.sort((a, b) => {
-      const priceA = a.priceUZS || a.price || 0;
-      const priceB = b.priceUZS || b.price || 0;
+      const priceA = a.priceUZS || a.price || a.price_from || 0;
+      const priceB = b.priceUZS || b.price || b.price_from || 0;
       const popA = a.popularity || 80;
       const popB = b.popularity || 80;
-      const ratA = a.rating || 5;
-      const ratB = b.rating || 5;
+      const ratA = a.rating || a.rating_avg || 5;
+      const ratB = b.rating || b.rating_avg || 5;
 
       if (sortBy === 'popularity') return popB - popA;
       if (sortBy === 'price_asc') return priceA - priceB;
@@ -199,7 +127,7 @@ export default function SearchPage() {
     });
 
     return result;
-  }, [apiTours, filters, sortBy]);
+  }, [tours, filters, sortBy, searchKeyword]);
 
   const displayPrice = (priceUZS) => {
     return `${(priceUZS || 0).toLocaleString('uz-UZ')} so'm`;
@@ -386,78 +314,42 @@ export default function SearchPage() {
           
           {/* Tour Grid */}
           <div className={`${showMap ? 'w-1/2 overflow-y-auto pr-2 no-scrollbar' : 'w-full'}`}>
-            {filteredTours.length === 0 ? (
-              <div className="text-center py-20 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-800 border-dashed">
-                <p className="text-neutral-500 dark:text-neutral-400">{t('nothingFound')}</p>
+            {isLoading ? (
+              <div className={`grid gap-6 ${showMap ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="animate-pulse rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 h-80 flex flex-col justify-between">
+                    <div className="w-full h-48 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                    <div className="space-y-2 mt-4">
+                      <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-3/4" />
+                      <div className="h-3 bg-neutral-200 dark:bg-neutral-800 rounded w-1/2" />
+                    </div>
+                    <div className="h-5 bg-neutral-200 dark:bg-neutral-800 rounded w-1/3 mt-4" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredTours.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-neutral-50 dark:bg-neutral-800/40 rounded-3xl border border-dashed border-neutral-200 dark:border-neutral-700">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4 shadow-sm">
+                  <Sparkles className="h-8 w-8" />
+                </div>
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-1">
+                  Hozircha faol turlar topilmadi
+                </h3>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-md mb-4">
+                  Yaqin orada yangi yo'nalishlar va qiziqarli safarlar qo'shiladi. Qidiruv filtrlarini tozalab ko'ring.
+                </p>
                 <button 
                   onClick={() => setFilters({format: [], organizerType: [], minPrice: '', maxPrice: '', durationType: [], rating: null, freeCancellation: false, transferIncluded: false})}
-                  className="mt-4 text-sm font-medium text-neutral-900 dark:text-white underline hover:text-neutral-700 dark:hover:text-neutral-300"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
                 >
-                  {t('clearFilters')}
+                  Filtrlarni tozalash
                 </button>
               </div>
             ) : (
               <div className={`grid gap-6 ${showMap ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                 {filteredTours.map(tour => (
-                  <div 
-                    key={tour.id} 
-                    className="group cursor-pointer flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:shadow-lg transition-shadow overflow-hidden"
-                    onMouseEnter={() => setHoveredTourId(tour.id)}
-                    onMouseLeave={() => setHoveredTourId(null)}
-                  >
-                    <div className="relative aspect-[4/3] w-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                      <img src={tour.image} alt={tour.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                      
-                      {/* Top Badges */}
-                      <div className="absolute top-3 right-3 rounded-full bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-neutral-900 dark:text-white shadow-sm flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        {tour.rating}
-                      </div>
-
-                      {/* Bottom Badges */}
-                      <div className="absolute bottom-3 left-3 flex gap-2">
-                        <div className="rounded-full bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wide">
-                          {tour.format === 'group' ? t('groupTour') : t('individualTour')}
-                        </div>
-                        {tour.organizerType === 'operator' ? (
-                           <div className="rounded-full bg-blue-50/90 dark:bg-blue-900/80 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide border border-blue-200 dark:border-blue-800">
-                             {t('operator')}
-                           </div>
-                        ) : (
-                           <div className="rounded-full bg-orange-50/90 dark:bg-orange-900/80 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-orange-700 dark:text-orange-300 uppercase tracking-wide border border-orange-200 dark:border-orange-800">
-                             {t('guide')}
-                           </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 flex flex-col flex-1">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-neutral-900 dark:text-white leading-tight">{tour.title}</h3>
-                        {tour.isVerified && (
-                          <div title="Tasdiqlangan tashkilotchi" className="mt-0.5">
-                            <ShieldCheck className="h-5 w-5 text-emerald-500" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 mb-3">
-                        <MapPin className="h-4 w-4" />
-                        <span className="truncate">{tour.location}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 w-fit px-2 py-1 rounded-md mb-4">
-                        <Clock className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
-                        {tour.durationStr}
-                      </div>
-
-                      <div className="mt-auto flex items-end justify-between border-t border-neutral-100 dark:border-neutral-800 pt-3">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">{t('pricePerPerson')}</span>
-                          <span className="text-lg font-bold text-neutral-900 dark:text-white leading-none">{displayPrice(tour.priceUZS)}</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div key={tour._id || tour.id} onClick={() => navigate(`/tour/${tour._id || tour.id}`)}>
+                    <TourCard tour={tour} />
                   </div>
                 ))}
               </div>
