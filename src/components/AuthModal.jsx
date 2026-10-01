@@ -35,6 +35,9 @@ export default function AuthModal({ isOpen, onClose }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isTelegramLoading, setIsTelegramLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   // Listen for OAuth callbacks (Redirect hash or Popup postMessage)
   React.useEffect(() => {
@@ -116,11 +119,8 @@ export default function AuthModal({ isOpen, onClose }) {
     return () => window.removeEventListener('message', handleMessage);
   }, [setUser, onClose]);
 
+  // Early return ONLY after ALL hooks are initialized
   if (!isOpen) return null;
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSendCode = async (e) => {
     if (e) e.preventDefault();
