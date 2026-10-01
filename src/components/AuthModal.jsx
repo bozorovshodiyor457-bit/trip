@@ -3,22 +3,29 @@ import { X, Smartphone, Mail, ShieldCheck, User, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 import authService from '../services/authService';
 
-// Helper to parse JWT id_token from Google
+// Helper to parse JWT id_token from Google safely
 function parseJwt(token) {
+  if (!token || typeof token !== 'string') return null;
   try {
-    const base64Url = token.split('.')[1];
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
   } catch (e) {
+    console.warn("JWT parse error:", e);
     return null;
   }
 }
 
 export default function AuthModal({ isOpen, onClose }) {
-  const { setUser, t } = useAppContext();
+  const context = useAppContext() || {};
+  const setUser = context.setUser || (() => {});
+  const t = context.t || ((key, fallback) => fallback || key);
+
   const [activeTab, setActiveTab] = useState('local'); // 'local' or 'foreign'
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState('');
@@ -237,63 +244,87 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   const handleGoogleLogin = () => {
-    setIsGoogleLoading(true);
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1047123987123-dummyclientid.apps.googleusercontent.com';
-    const redirectUri = window.location.origin;
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token%20id_token&scope=email%20profile%20openid&prompt=select_account`;
+    try {
+      setIsGoogleLoading(true);
+      setErrorMsg('');
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1047123987123-dummyclientid.apps.googleusercontent.com';
+      const redirectUri = window.location.origin;
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token%20id_token&scope=email%20profile%20openid&prompt=select_account`;
 
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
+      const width = 500;
+      const height = 600;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
 
-    const popup = window.open(
-      googleAuthUrl,
-      'Google OAuth Login',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
+      const popup = window.open(
+        googleAuthUrl,
+        'Google OAuth Login',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
 
-    if (!popup) {
-      window.location.href = googleAuthUrl;
-      return;
-    }
-
-    const timer = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(timer);
-        setIsGoogleLoading(false);
+      if (!popup) {
+        window.location.href = googleAuthUrl;
+        return;
       }
-    }, 1000);
+
+      const timer = setInterval(() => {
+        try {
+          if (popup.closed) {
+            clearInterval(timer);
+            setIsGoogleLoading(false);
+          }
+        } catch (e) {
+          clearInterval(timer);
+          setIsGoogleLoading(false);
+        }
+      }, 1000);
+    } catch (err) {
+      console.error("Google auth error:", err);
+      setIsGoogleLoading(false);
+      setErrorMsg("Google orqali kirishda xatolik yuz berdi");
+    }
   };
 
   const handleTelegramLogin = () => {
-    setIsTelegramLoading(true);
-    const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || '7123456789';
-    const origin = encodeURIComponent(window.location.origin);
-    const telegramAuthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&embed=0&request_access=write`;
+    try {
+      setIsTelegramLoading(true);
+      setErrorMsg('');
+      const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || '7123456789';
+      const origin = encodeURIComponent(window.location.origin);
+      const telegramAuthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&embed=0&request_access=write`;
 
-    const width = 550;
-    const height = 470;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
+      const width = 550;
+      const height = 470;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
 
-    const popup = window.open(
-      telegramAuthUrl,
-      'Telegram OAuth Login',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
+      const popup = window.open(
+        telegramAuthUrl,
+        'Telegram OAuth Login',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
 
-    if (!popup) {
-      window.location.href = telegramAuthUrl;
-      return;
-    }
-
-    const timer = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(timer);
-        setIsTelegramLoading(false);
+      if (!popup) {
+        window.location.href = telegramAuthUrl;
+        return;
       }
-    }, 1000);
+
+      const timer = setInterval(() => {
+        try {
+          if (popup.closed) {
+            clearInterval(timer);
+            setIsTelegramLoading(false);
+          }
+        } catch (e) {
+          clearInterval(timer);
+          setIsTelegramLoading(false);
+        }
+      }, 1000);
+    } catch (err) {
+      console.error("Telegram auth error:", err);
+      setIsTelegramLoading(false);
+      setErrorMsg("Telegram orqali kirishda xatolik yuz berdi");
+    }
   };
 
   return (
