@@ -375,6 +375,7 @@ function AppContent() {
           <Route path="/seo/:city" element={<SeoDestinationPage />} />
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/status" element={<BookingStatusPage />} />
+          <Route path="/booking-success" element={<BookingStatusPage />} />
         </Routes>
       </main>
 

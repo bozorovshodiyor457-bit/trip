@@ -29,7 +29,8 @@ export default function CheckoutPage() {
 
   // Step 4 State
   const [paymentType, setPaymentType] = useState('full'); // full, advance
-  const [paymentMethod, setPaymentMethod] = useState('payme'); // payme, click, uzum, card, invoice
+  const [paymentMethod, setPaymentMethod] = useState('cardsystem'); // cardsystem (inPAY), click, payme
+  const [isMockLoading, setIsMockLoading] = useState(false);
   
   // C-20 Corporate Info
   const [companyInfo, setCompanyInfo] = useState({ inn: '', name: '', bank: '', mfo: '' });
@@ -179,23 +180,68 @@ export default function CheckoutPage() {
 
   const handlePayment = async () => {
     setIsLoading(true);
-    const targetId = bookingId || 'demo-booking-id';
+    let targetId = bookingId;
+    
+    if (!targetId) {
+      try {
+        const holdRes = await bookingService.holdBooking({
+          adultCount: adults,
+          childCount: children,
+          notes: extras.transfer ? 'Transfer' : ''
+        });
+        targetId = holdRes?.booking?._id || holdRes?._id || holdRes?.id || 'demo-booking-id';
+        setBookingId(targetId);
+      } catch (e) {
+        targetId = 'demo-booking-id';
+      }
+    }
+
     try {
-      const res = await bookingService.payBooking(targetId, { provider: paymentMethod });
-      if (res?.paymentUrl) {
-        window.location.href = res.paymentUrl;
+      const payUrl = await bookingService.initiatePayment(targetId, paymentMethod);
+      if (typeof payUrl === 'string' && (payUrl.startsWith('http://') || payUrl.startsWith('https://'))) {
+        window.location.href = payUrl;
+        return;
+      } else if (payUrl?.pay_url || payUrl?.paymentUrl) {
+        window.location.href = payUrl.pay_url || payUrl.paymentUrl;
         return;
       }
+      // Fallback navigation if API response doesn't give direct redirect URL
+      navigate(`/status?id=${targetId}`);
     } catch (err) {
-      console.warn('Real payment endpoint fallback to mock payment:', err);
-      try {
-        await bookingService.payMockBooking(targetId);
-      } catch (mockErr) {
-        console.warn('Mock payment error:', mockErr);
-      }
+      console.error('initiatePayment error:', err);
+      alert(err.message || "To'lov tizimiga ulana olmadi. Iltimos qaytadan urinib ko'ring.");
     } finally {
       setIsLoading(false);
-      navigate(`/status?id=${targetId}`);
+    }
+  };
+
+  const handleMockPayment = async () => {
+    setIsMockLoading(true);
+    let targetId = bookingId;
+
+    if (!targetId) {
+      try {
+        const holdRes = await bookingService.holdBooking({
+          adultCount: adults,
+          childCount: children,
+          notes: extras.transfer ? 'Transfer' : ''
+        });
+        targetId = holdRes?.booking?._id || holdRes?._id || holdRes?.id || 'demo-booking-id';
+        setBookingId(targetId);
+      } catch (e) {
+        targetId = 'demo-booking-id';
+      }
+    }
+
+    try {
+      await bookingService.mockPayment(targetId);
+      alert("Test mode: To'lov muvaffaqiyatli amalga oshirildi!");
+      navigate(`/status?id=${targetId}&status=success`);
+    } catch (err) {
+      console.warn('Mock payment error:', err);
+      navigate(`/status?id=${targetId}&status=success`);
+    } finally {
+      setIsMockLoading(false);
     }
   };
 
@@ -432,13 +478,20 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mb-8">
-                <h3 className="text-sm font-bold text-neutral-900 dark:text-white uppercase tracking-wider mb-3">To'lov usuli</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {['payme', 'click', 'uzum', 'card', 'invoice'].map(method => (
-                    <label key={method} className={`flex flex-col items-center justify-center p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === method ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/10 ring-1 ring-emerald-600' : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}`}>
-                      <input type="radio" name="method" checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} className="hidden" />
-                      {method === 'card' ? <CreditCard className="h-6 w-6 text-neutral-700 dark:text-neutral-300 mb-2" /> : method === 'invoice' ? <FileText className="h-6 w-6 text-neutral-700 dark:text-neutral-300 mb-2" /> : <div className="h-6 font-black text-neutral-700 dark:text-neutral-300 mb-2 capitalize">{method}</div>}
-                      <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center capitalize">{method === 'card' ? 'Bank kartasi' : method === 'invoice' ? 'Hisob-faktura' : method}</span>
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white uppercase tracking-wider mb-3">To'lov usulini tanlang</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: 'cardsystem', name: 'inPAY (Uzcard / Humo / Visa)', icon: CreditCard, subtitle: 'Barcha bank kartalari' },
+                    { id: 'click', name: 'Click', icon: null, subtitle: 'Click Up orqali' },
+                    { id: 'payme', name: 'Payme', icon: null, subtitle: 'Payme ilovasi orqali' },
+                  ].map(method => (
+                    <label key={method.id} className={`flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === method.id ? 'border-emerald-600 bg-emerald-50/40 dark:bg-emerald-900/20 ring-2 ring-emerald-600/30' : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <input type="radio" name="method" checked={paymentMethod === method.id} onChange={() => setPaymentMethod(method.id)} className="accent-emerald-600 h-4 w-4" />
+                        {method.icon ? <method.icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> : <div className="text-xs font-black px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 uppercase">{method.id}</div>}
+                      </div>
+                      <span className="text-sm font-bold text-neutral-900 dark:text-white">{method.name}</span>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{method.subtitle}</span>
                     </label>
                   ))}
                 </div>
@@ -471,10 +524,10 @@ export default function CheckoutPage() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex flex-wrap justify-between items-center gap-4 pt-4">
             <button 
               onClick={handlePrev}
-              disabled={step === 1}
+              disabled={step === 1 || isLoading || isMockLoading}
               className="px-6 py-2.5 rounded-lg text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors disabled:opacity-0"
             >
               Orqaga
@@ -488,13 +541,26 @@ export default function CheckoutPage() {
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Davom etish <ArrowRight className="h-4 w-4" /></>}
               </button>
             ) : (
-              <button 
-                onClick={handlePayment}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors shadow-md disabled:opacity-50"
-              >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (paymentMethod === 'invoice' ? 'Hisob-faktura yuklab olish (PDF)' : `To'lash (${toPayNow.toLocaleString()} so'm)`)}
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Test mode button */}
+                <button
+                  type="button"
+                  onClick={handleMockPayment}
+                  disabled={isLoading || isMockLoading}
+                  className="px-5 py-3 rounded-xl border border-dashed border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30 hover:bg-amber-100 font-semibold text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isMockLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Test rejimida to'lash"}
+                </button>
+
+                {/* Main inPAY / Provider button */}
+                <button 
+                  onClick={handlePayment}
+                  disabled={isLoading || isMockLoading}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/20 disabled:opacity-50"
+                >
+                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : `To'lash (${toPayNow.toLocaleString()} so'm)`}
+                </button>
+              </div>
             )}
           </div>
         </div>

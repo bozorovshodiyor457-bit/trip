@@ -4,7 +4,6 @@ const bookingService = {
   /**
    * POST /api/b2c/bookings/hold
    * Hold seats temporarily (15 mins)
-   * @param {Object} payload - { departureId, optionId, adultCount, childCount, infantCount, customerNotes }
    */
   holdBooking: async (payload) => {
     try {
@@ -17,34 +16,74 @@ const bookingService = {
   },
 
   /**
-   * POST /api/b2c/bookings/:id/pay
-   * Get real inPAY (Payme/Click) link
-   * @param {string} id - Booking ID
-   * @param {Object} payload - { provider: 'payme'|'click' }
+   * GET /api/b2c/bookings/:id
+   * Fetch booking details by ID
    */
-  payBooking: async (id, payload = {}) => {
+  getBookingById: async (id) => {
     try {
-      const response = await api.post(`/api/b2c/bookings/${id}/pay`, payload);
+      const response = await api.get(`/api/b2c/bookings/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`payBooking (${id}) error:`, error);
+      console.error(`getBookingById (${id}) error:`, error);
       throw error.response?.data || error;
     }
   },
 
   /**
-   * POST /api/b2c/bookings/:id/pay-mock
-   * Test mode payment simulation
-   * @param {string} id - Booking ID
+   * POST /api/b2c/bookings/:id/pay
+   * initiatePayment(bookingId, paymentMethod = 'cardsystem')
+   * Body: { payment_method: paymentMethod } ('cardsystem', 'click', 'payme')
+   * Returns inPAY payment URL (res.data.pay_url || res.data.paymentUrl || res.data.data?.pay_url)
    */
-  payMockBooking: async (id) => {
+  initiatePayment: async (bookingId, paymentMethod = 'cardsystem') => {
     try {
-      const response = await api.post(`/api/b2c/bookings/${id}/pay-mock`);
-      return response.data;
+      const token = localStorage.getItem('token');
+      const response = await api.post(
+        `/api/b2c/bookings/${bookingId}/pay`,
+        { payment_method: paymentMethod },
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      
+      const payUrl = response.data?.pay_url || response.data?.paymentUrl || response.data?.data?.pay_url || response.data?.url;
+      return payUrl || response.data;
     } catch (error) {
-      console.error(`payMockBooking (${id}) error:`, error);
+      console.error(`initiatePayment (${bookingId}, ${paymentMethod}) error:`, error);
       throw error.response?.data || error;
     }
+  },
+
+  /**
+   * Legacy wrapper for payBooking
+   */
+  payBooking: async (id, payload = {}) => {
+    const method = payload.payment_method || payload.provider || 'cardsystem';
+    return await bookingService.initiatePayment(id, method);
+  },
+
+  /**
+   * POST /api/b2c/bookings/:id/pay-mock
+   * Mock payment for test mode
+   */
+  mockPayment: async (bookingId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.post(
+        `/api/b2c/bookings/${bookingId}/pay-mock`,
+        {},
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`mockPayment (${bookingId}) error:`, error);
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
+   * Alias for mockPayment
+   */
+  payMockBooking: async (id) => {
+    return await bookingService.mockPayment(id);
   },
 
   /**
@@ -64,7 +103,6 @@ const bookingService = {
   /**
    * GET /api/b2c/bookings/:id/voucher
    * Download voucher details & QR code info
-   * @param {string} id - Booking ID
    */
   getVoucher: async (id) => {
     try {
@@ -79,8 +117,6 @@ const bookingService = {
   /**
    * POST /api/b2c/bookings/:id/cancel
    * Cancel booking
-   * @param {string} id - Booking ID
-   * @param {Object} payload - { reason }
    */
   cancelBooking: async (id, payload = {}) => {
     try {
