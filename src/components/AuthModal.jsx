@@ -1,7 +1,21 @@
 import React, { useState } from 'react';
-import { X, Smartphone, Mail, ShieldCheck, User } from 'lucide-react';
+import { X, Smartphone, Mail, ShieldCheck, User, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 import authService from '../services/authService';
+
+// Helper to parse JWT id_token from Google
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
 
 export default function AuthModal({ isOpen, onClose }) {
   const { setUser, t } = useAppContext();
@@ -15,6 +29,86 @@ export default function AuthModal({ isOpen, onClose }) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isTelegramLoading, setIsTelegramLoading] = useState(false);
 
+  // Listen for OAuth callbacks (Redirect hash or Popup postMessage)
+  React.useEffect(() => {
+    function handleMessage(event) {
+      if (event.data && event.data.type === 'OAUTH_AUTH_SUCCESS' && event.data.user) {
+        setUser(event.data.user);
+        localStorage.setItem('visitca_user', JSON.stringify(event.data.user));
+        setIsGoogleLoading(false);
+        setIsTelegramLoading(false);
+        onClose();
+      }
+    }
+    window.addEventListener('message', handleMessage);
+
+    // Process hash or search params if returned via OAuth redirect
+    const hash = window.location.hash;
+    const search = window.location.search;
+
+    if (hash.includes('access_token') || hash.includes('id_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const idToken = params.get('id_token');
+      const accessToken = params.get('access_token');
+
+      if (idToken) {
+        const parsed = parseJwt(idToken);
+        if (parsed) {
+          const googleUser = {
+            name: parsed.name || parsed.given_name || parsed.email?.split('@')[0] || "Google Foydalanuvchisi",
+            email: parsed.email,
+            avatar: parsed.picture || "https://lh3.googleusercontent.com/a/default-user=s96-c",
+            provider: "google",
+            token: idToken
+          };
+          setUser(googleUser);
+          localStorage.setItem('visitca_user', JSON.stringify(googleUser));
+          window.history.replaceState(null, '', window.location.pathname);
+          onClose();
+        }
+      } else if (accessToken) {
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.email) {
+              const googleUser = {
+                name: data.name || data.email.split('@')[0],
+                email: data.email,
+                avatar: data.picture || "https://lh3.googleusercontent.com/a/default-user=s96-c",
+                provider: "google",
+                token: accessToken
+              };
+              setUser(googleUser);
+              localStorage.setItem('visitca_user', JSON.stringify(googleUser));
+              window.history.replaceState(null, '', window.location.pathname);
+              onClose();
+            }
+          })
+          .catch(err => console.error("Google userinfo fetch error:", err));
+      }
+    }
+
+    if (search.includes('hash=') && (search.includes('first_name=') || search.includes('id='))) {
+      const params = new URLSearchParams(search);
+      const tgUser = {
+        name: `${params.get('first_name') || ''} ${params.get('last_name') || ''}`.trim() || params.get('username') || "Telegram Foydalanuvchisi",
+        email: params.get('username') ? `@${params.get('username')}` : null,
+        phone: params.get('phone') || '',
+        avatar: params.get('photo_url') || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80",
+        provider: "telegram",
+        telegramId: params.get('id')
+      };
+      setUser(tgUser);
+      localStorage.setItem('visitca_user', JSON.stringify(tgUser));
+      window.history.replaceState(null, '', window.location.pathname);
+      onClose();
+    }
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, [setUser, onClose]);
+
   if (!isOpen) return null;
 
   const handleSendCode = async (e) => {
@@ -22,31 +116,15 @@ export default function AuthModal({ isOpen, onClose }) {
     if (phone.length < 5) return;
 
     try {
-      // O'zbekiston kodi bilan to'liq raqamni shakllantirish
       const phoneNumber = `998${phone.replace(/\D/g, '')}`;
-      
-      // Textup.uz API ga so'rov yuborish
-      const response = await fetch('https://api.textup.uz/sendsms', {
+      await fetch('https://api.textup.uz/sendsms', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer SIZNING_API_KALITINGIZ' // TODO: Replace with real API key
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: phoneNumber,
           text: 'Visitca Trip: Tizimga kirish uchun tasdiqlash kodingiz - 1234'
         })
       });
-      
-      // Real API ishlatilganda quyidagi xatolar nazorat qilinadi:
-      /*
-      if (!response.ok) {
-        throw new Error("SMS xizmatida xatolik yuz berdi");
-      }
-      const data = await response.json();
-      */
-      
-      // Muvaffaqiyatli jo'natilganda 2-qadamga o'tish
       setStep(2);
     } catch (error) {
       console.error("SMS yuborishda xatolik:", error);
@@ -59,26 +137,19 @@ export default function AuthModal({ isOpen, onClose }) {
     if (val.length > 9) val = val.slice(0, 9);
     
     let formatted = val;
-    if (val.length > 2) {
-      formatted = val.slice(0, 2) + '-' + val.slice(2);
-    }
-    if (val.length > 5) {
-      formatted = formatted.slice(0, 6) + '-' + formatted.slice(6);
-    }
-    if (val.length > 7) {
-      formatted = formatted.slice(0, 9) + '-' + formatted.slice(9);
-    }
+    if (val.length > 2) formatted = val.slice(0, 2) + '-' + val.slice(2);
+    if (val.length > 5) formatted = formatted.slice(0, 6) + '-' + formatted.slice(6);
+    if (val.length > 7) formatted = formatted.slice(0, 9) + '-' + formatted.slice(9);
     
     setPhone(formatted);
   };
 
   const handleVerify = (e) => {
     e.preventDefault();
-    setStep(3); // Go to OneID step
+    setStep(3);
   };
 
   const handleOneIDVerify = () => {
-    // Mock OneID verification
     const userData = {
       name: 'O\'zbekiston Fuqarosi',
       phone: `+998 ${phone}`,
@@ -108,40 +179,61 @@ export default function AuthModal({ isOpen, onClose }) {
 
   const handleGoogleLogin = () => {
     setIsGoogleLoading(true);
-    setTimeout(() => {
-      const googleUser = {
-        name: "Google Foydalanuvchisi",
-        email: "user.google@gmail.com",
-        avatar: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-        provider: "google",
-        token: "mock-google-jwt-token"
-      };
-      setUser(googleUser);
-      localStorage.setItem('visitca_user', JSON.stringify(googleUser));
-      localStorage.setItem('token', googleUser.token);
-      setIsGoogleLoading(false);
-      onClose();
-      alert("Google orqali tizimga muvaffaqiyatli kirdingiz!");
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1047123987123-dummyclientid.apps.googleusercontent.com';
+    const redirectUri = window.location.origin;
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token%20id_token&scope=email%20profile%20openid&prompt=select_account`;
+
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const popup = window.open(
+      googleAuthUrl,
+      'Google OAuth Login',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    if (!popup) {
+      window.location.href = googleAuthUrl;
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(timer);
+        setIsGoogleLoading(false);
+      }
     }, 1000);
   };
 
   const handleTelegramLogin = () => {
     setIsTelegramLoading(true);
-    setTimeout(() => {
-      const telegramUser = {
-        name: "Telegram Foydalanuvchisi",
-        email: "telegram_user@t.me",
-        phone: "+998901234567",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80",
-        provider: "telegram",
-        token: "mock-telegram-jwt-token"
-      };
-      setUser(telegramUser);
-      localStorage.setItem('visitca_user', JSON.stringify(telegramUser));
-      localStorage.setItem('token', telegramUser.token);
-      setIsTelegramLoading(false);
-      onClose();
-      alert("Telegram orqali tizimga muvaffaqiyatli kirdingiz!");
+    const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || '7123456789';
+    const origin = encodeURIComponent(window.location.origin);
+    const telegramAuthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&embed=0&request_access=write`;
+
+    const width = 550;
+    const height = 470;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const popup = window.open(
+      telegramAuthUrl,
+      'Telegram OAuth Login',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    if (!popup) {
+      window.location.href = telegramAuthUrl;
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(timer);
+        setIsTelegramLoading(false);
+      }
     }, 1000);
   };
 
@@ -318,27 +410,37 @@ export default function AuthModal({ isOpen, onClose }) {
                 <button 
                   type="button" 
                   onClick={handleGoogleLogin} 
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors"
+                  disabled={isGoogleLoading || isTelegramLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
                 >
-                  <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
-                    <path
-                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                      fill="#4285F4"
-                    />
-                  </svg>
-                  <span className="text-sm">{isGoogleLoading ? 'Yuklanmoqda...' : 'Google'}</span>
+                  {isGoogleLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                        fill="#4285F4"
+                      />
+                    </svg>
+                  )}
+                  <span className="text-sm">{isGoogleLoading ? 'Kutilmoqda...' : 'Google'}</span>
                 </button>
 
                 <button 
                   type="button" 
                   onClick={handleTelegramLogin} 
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors"
+                  disabled={isGoogleLoading || isTelegramLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#2AABEE"/>
-                    <path d="M5.44198 11.5173L16.2731 7.33758C16.7761 7.15286 17.218 7.45892 17.0601 8.01633L15.176 16.8904C15.0298 17.5458 14.6374 17.708 14.0924 17.4019L11.0967 15.1951L9.65152 16.5866C9.4916 16.7465 9.35824 16.8799 9.06456 16.8799L9.2798 13.8217L14.845 8.78857C15.0872 8.57288 14.7925 8.45266 14.4715 8.66835L7.58554 13.0033L4.62241 12.076C3.97811 11.8745 3.96541 11.4326 4.75713 11.1216L5.44198 11.5173Z" fill="white"/>
-                  </svg>
-                  <span className="text-sm">{isTelegramLoading ? 'Yuklanmoqda...' : 'Telegram'}</span>
+                  {isTelegramLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
+                  ) : (
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#2AABEE"/>
+                      <path d="M5.44198 11.5173L16.2731 7.33758C16.7761 7.15286 17.218 7.45892 17.0601 8.01633L15.176 16.8904C15.0298 17.5458 14.6374 17.708 14.0924 17.4019L11.0967 15.1951L9.65152 16.5866C9.4916 16.7465 9.35824 16.8799 9.06456 16.8799L9.2798 13.8217L14.845 8.78857C15.0872 8.57288 14.7925 8.45266 14.4715 8.66835L7.58554 13.0033L4.62241 12.076C3.97811 11.8745 3.96541 11.4326 4.75713 11.1216L5.44198 11.5173Z" fill="white"/>
+                    </svg>
+                  )}
+                  <span className="text-sm">{isTelegramLoading ? 'Kutilmoqda...' : 'Telegram'}</span>
                 </button>
               </div>
 
