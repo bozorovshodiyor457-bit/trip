@@ -54,6 +54,32 @@ const authService = {
       throw error.response?.data || error;
     }
   },
+
+  /**
+   * Google orqali avtorizatsiya so'rovi (Mock function, haqiqiy API ga moslash kerak)
+   */
+  loginWithGoogle: async () => {
+    try {
+      // Typically returns a redirect URL to Google OAuth
+      const response = await api.get('/auth/google/url');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
+   * Telegram orqali avtorizatsiya so'rovi (Mock function, haqiqiy API ga moslash kerak)
+   */
+  loginWithTelegram: async () => {
+    try {
+      // Typically returns a redirect URL or Telegram widget info
+      const response = await api.get('/auth/telegram/url');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
   
   /**
    * OneID orqali avtorizatsiya so'rovi (Mock function, haqiqiy API ga moslash kerak)

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Smartphone, Mail, ShieldCheck, User } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
+import authService from '../services/authService';
 
 export default function AuthModal({ isOpen, onClose }) {
   const { setUser, t } = useAppContext();
@@ -96,6 +97,43 @@ export default function AuthModal({ isOpen, onClose }) {
       name: resolvedName,
       email: email,
       phone: '',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80'
+    };
+    setUser(userData);
+    localStorage.setItem('visitca_user', JSON.stringify(userData));
+    onClose();
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await authService.loginWithGoogle();
+      // Haqiqiy API da bu joyda OAuth URL qaytadi va redirect qilinadi
+      // window.location.href = data.url;
+    } catch (error) {
+      console.log('Google login (mocking fallback): ', error);
+    }
+    // Mock muvaffaqiyat
+    const userData = {
+      name: 'Google User',
+      email: 'user@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80'
+    };
+    setUser(userData);
+    localStorage.setItem('visitca_user', JSON.stringify(userData));
+    onClose();
+  };
+
+  const handleTelegramLogin = async () => {
+    try {
+      await authService.loginWithTelegram();
+      // Telegram login odatda maxsus widget orqali qilinadi, API dan widget info yoki URL qaytadi
+    } catch (error) {
+      console.log('Telegram login (mocking fallback): ', error);
+    }
+    // Mock muvaffaqiyat
+    const userData = {
+      name: 'Telegram User',
+      phone: '+998 90 000 0000',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80'
     };
     setUser(userData);
@@ -273,7 +311,11 @@ export default function AuthModal({ isOpen, onClose }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-4">
-                <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors">
+                <button 
+                  type="button" 
+                  onClick={handleGoogleLogin} 
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors"
+                >
                   <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                     <path
                       d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
@@ -283,7 +325,11 @@ export default function AuthModal({ isOpen, onClose }) {
                   <span className="text-sm">Google</span>
                 </button>
 
-                <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors">
+                <button 
+                  type="button" 
+                  onClick={handleTelegramLogin} 
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200 shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-200 transition-colors"
+                >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#2AABEE"/>
                     <path d="M5.44198 11.5173L16.2731 7.33758C16.7761 7.15286 17.218 7.45892 17.0601 8.01633L15.176 16.8904C15.0298 17.5458 14.6374 17.708 14.0924 17.4019L11.0967 15.1951L9.65152 16.5866C9.4916 16.7465 9.35824 16.8799 9.06456 16.8799L9.2798 13.8217L14.845 8.78857C15.0872 8.57288 14.7925 8.45266 14.4715 8.66835L7.58554 13.0033L4.62241 12.076C3.97811 11.8745 3.96541 11.4326 4.75713 11.1216L5.44198 11.5173Z" fill="white"/>
