@@ -21,6 +21,23 @@ function parseJwt(token) {
   }
 }
 
+// Helper to safely extract string error message from backend responses or Axios errors
+function formatErrorMessage(err, fallback = "Noto'g'ri telefon raqami yoki email kiritildi") {
+  if (!err) return fallback;
+  if (typeof err === 'string') return err;
+  if (err.response?.data) {
+    const data = err.response.data;
+    if (typeof data === 'string') return data;
+    if (typeof data.error === 'string') return data.error;
+    if (data.error?.message && typeof data.error.message === 'string') return data.error.message;
+    if (typeof data.message === 'string') return data.message;
+  }
+  if (typeof err.error === 'string') return err.error;
+  if (err.error?.message && typeof err.error.message === 'string') return err.error.message;
+  if (typeof err.message === 'string') return err.message;
+  return fallback;
+}
+
 export default function AuthModal({ isOpen, onClose }) {
   const context = useAppContext() || {};
   const setUser = context.setUser || (() => {});
@@ -148,16 +165,15 @@ export default function AuthModal({ isOpen, onClose }) {
     try {
       const res = await authService.sendOtp(identifier);
       if (res && res.success === false) {
-        const message = res.message || res.error || "Noto'g'ri telefon raqami yoki email kiritildi";
-        setErrorMsg(message);
+        setErrorMsg(formatErrorMessage(res, "Noto'g'ri telefon raqami yoki email kiritildi"));
         return;
       }
-      setSuccessMsg("Kod yuborildi! Email yoki Telegramingizga kelgan kodni kiriting.");
+      const msg = typeof res?.message === 'string' ? res.message : "Kod yuborildi! Email yoki Telegramingizga kelgan kodni kiriting.";
+      setSuccessMsg(msg);
       setStep(2);
     } catch (err) {
       console.error("OTP send error:", err);
-      const message = err.response?.data?.message || err.response?.data?.error || err.message || "Noto'g'ri telefon raqami yoki email kiritildi";
-      setErrorMsg(message);
+      setErrorMsg(formatErrorMessage(err, "Noto'g'ri telefon raqami yoki email kiritildi"));
     } finally {
       setIsLoading(false);
     }
@@ -225,8 +241,7 @@ export default function AuthModal({ isOpen, onClose }) {
     } catch (err) {
       console.error("OTP verify error:", err);
       setIsLoading(false);
-      const message = err.response?.data?.message || err.response?.data?.error || err.message || "Noto'g'ri kod kiritildi yoki serverda xatolik yuz berdi";
-      setErrorMsg(message);
+      setErrorMsg(formatErrorMessage(err, "Noto'g'ri kod kiritildi yoki serverda xatolik yuz berdi"));
     }
   };
 

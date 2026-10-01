@@ -1,15 +1,15 @@
 import api from './api';
 
 // Helper to format payload properly according to identifier type (Phone vs Email)
+// Railway backend strictly expects ONLY { email: '...' } OR { phone: '+998...' }.
+// Sending extra keys like 'identifier' or 'type' causes status 400 VALIDATION_ERROR.
 function buildAuthPayload(identifier, extraData = {}) {
   const str = String(identifier || '').trim();
   const isEmail = str.includes('@');
   
   if (isEmail) {
     return {
-      identifier: str,
       email: str,
-      type: 'email',
       ...extraData
     };
   } else {
@@ -20,9 +20,7 @@ function buildAuthPayload(identifier, extraData = {}) {
     }
     const cleanPhone = digits.startsWith('+') ? digits : `+${digits}`;
     return {
-      identifier: cleanPhone,
       phone: cleanPhone,
-      type: 'phone',
       ...extraData
     };
   }
@@ -60,7 +58,7 @@ const authService = {
       return response.data;
     } catch (error) {
       console.error("verifyOtp API error:", error);
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -75,7 +73,7 @@ const authService = {
       const response = await api.get('/api/b2c/auth/me', config);
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
 
@@ -83,24 +81,14 @@ const authService = {
    * Telefon raqamiga SMS jo'natish
    */
   sendLoginCode: async (phone) => {
-    try {
-      const response = await api.post('/api/b2c/auth/send-otp', { identifier: phone, phone });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    return authService.sendOtp(phone);
   },
 
   /**
    * SMS kodni tasdiqlash
    */
   verifyCode: async (phone, code) => {
-    try {
-      const response = await api.post('/api/b2c/auth/verify-otp', { identifier: phone, phone, code });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    return authService.verifyOtp(phone, code);
   }
 };
 
