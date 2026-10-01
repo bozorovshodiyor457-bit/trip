@@ -5,6 +5,42 @@ import uploadService from '../services/uploadService';
 import authService, { getCompanions } from '../services/authService';
 import interactionService from '../services/interactionService';
 
+function compressImageToThumbnail(file, maxWidth = 250, maxHeight = 250) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = Math.max(1, Math.floor(width));
+        canvas.height = Math.max(1, Math.floor(height));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => resolve(event.target.result);
+    };
+    reader.onerror = () => resolve(null);
+  });
+}
+
 export default function ProfilePage() {
   const { user, setUser } = useAppContext();
   const [companions, setCompanions] = useState([]);
@@ -88,16 +124,12 @@ export default function ProfilePage() {
         newAvatarUrl = res?.url;
         if (newAvatarUrl) isServerSuccess = true;
       } catch (uploadErr) {
-        console.warn("Server upload warning, generating local preview URL:", uploadErr);
+        console.warn("Server upload warning, generating lightweight local preview URL:", uploadErr);
       }
 
-      // If server didn't return URL, convert file locally to Data URL
+      // If server didn't return URL, generate a compressed 250x250 Data URL thumbnail
       if (!newAvatarUrl) {
-        newAvatarUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
+        newAvatarUrl = await compressImageToThumbnail(file);
       }
 
       if (newAvatarUrl) {
@@ -107,7 +139,11 @@ export default function ProfilePage() {
           avatarUrl: newAvatarUrl
         };
         setUser(updatedUser);
-        localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+        try {
+          localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+        } catch (storageErr) {
+          console.warn("LocalStorage save error:", storageErr);
+        }
         setAvatarSuccess(isServerSuccess ? "Profil rasmi muvaffaqiyatli yangilandi" : "Profil rasmi tanlandi va saqlandi");
       }
     } catch (err) {

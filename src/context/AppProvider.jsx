@@ -12,8 +12,13 @@ export const AppProvider = ({ children }) => {
   const currency = 'UZS';
   const setCurrency = () => {};
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('visitca_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('visitca_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      console.warn("Failed to parse visitca_user from localStorage", e);
+      return null;
+    }
   });
 
   useEffect(() => {
@@ -22,7 +27,11 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('visitca_user', JSON.stringify(user));
+      try {
+        localStorage.setItem('visitca_user', JSON.stringify(user));
+      } catch (e) {
+        console.warn("Failed to save visitca_user to localStorage", e);
+      }
     } else {
       localStorage.removeItem('visitca_user');
     }
