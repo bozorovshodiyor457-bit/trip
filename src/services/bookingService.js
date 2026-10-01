@@ -41,7 +41,7 @@ const bookingService = {
    * POST /api/b2c/bookings/:id/pay
    * initiatePayment(bookingId, paymentMethod = 'cardsystem')
    * Body: { payment_method: paymentMethod } ('cardsystem', 'click', 'payme')
-   * Returns inPAY payment URL (res.data.pay_url || res.data.paymentUrl || res.data.data?.pay_url)
+   * Returns inPAY payment URL (res.data.payment_result?.pay_url || res.data.pay_url || ...)
    */
   initiatePayment: async (bookingId, paymentMethod = 'cardsystem') => {
     console.log(`API Request: POST /api/b2c/bookings/${bookingId}/pay`, { payment_method: paymentMethod });
@@ -54,10 +54,33 @@ const bookingService = {
       );
       console.log(`API Response: POST /api/b2c/bookings/${bookingId}/pay`, response.data);
       
-      const payUrl = response.data?.pay_url || response.data?.paymentUrl || response.data?.data?.pay_url || response.data?.url;
+      const payUrl = response.data?.payment_result?.pay_url || response.data?.pay_url || response.data?.paymentUrl || response.data?.data?.pay_url || response.data?.url;
       return payUrl || response.data;
     } catch (error) {
       console.error(`API Error: POST /api/b2c/bookings/${bookingId}/pay failed:`, error.response?.data || error.message);
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
+   * POST /api/b2c/bookings/:id/pay-remaining
+   * Pay remaining 50% balance via inPAY
+   */
+  payRemaining: async (bookingId, paymentMethod = 'cardsystem') => {
+    console.log(`API Request: POST /api/b2c/bookings/${bookingId}/pay-remaining`, { payment_method: paymentMethod });
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.post(
+        `/api/b2c/bookings/${bookingId}/pay-remaining`,
+        { payment_method: paymentMethod },
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
+      console.log(`API Response: POST /api/b2c/bookings/${bookingId}/pay-remaining`, response.data);
+      
+      const payUrl = response.data?.payment_result?.pay_url || response.data?.pay_url || response.data?.paymentUrl || response.data?.data?.pay_url || response.data?.url;
+      return payUrl || response.data;
+    } catch (error) {
+      console.error(`API Error: POST /api/b2c/bookings/${bookingId}/pay-remaining failed:`, error.response?.data || error.message);
       throw error.response?.data || error;
     }
   },
