@@ -12,6 +12,7 @@ export default function ProfilePage() {
 
   // Avatar Upload States
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState('');
   const [avatarError, setAvatarError] = useState('');
   const [avatarSuccess, setAvatarSuccess] = useState('');
   const fileInputRef = useRef(null);
@@ -30,6 +31,10 @@ export default function ProfilePage() {
           const fetchedUser = profileRes.user || profileRes.data || profileRes;
           setUser(fetchedUser);
           localStorage.setItem('visitca_user', JSON.stringify(fetchedUser));
+          const fetchedAvatar = fetchedUser.avatar_url || fetchedUser.avatar || fetchedUser.avatarUrl;
+          if (fetchedAvatar && typeof fetchedAvatar === 'string') {
+            setUploadedAvatarUrl(fetchedAvatar);
+          }
         }
       } catch (err) {
         console.warn("API notice: GET /api/b2c/auth/me", err);
@@ -54,10 +59,7 @@ export default function ProfilePage() {
   }, [setUser]);
 
   const currentUser = user || {};
-  const rawAvatar = currentUser.avatar || currentUser.avatarUrl;
-  const userAvatar = typeof rawAvatar === 'string' 
-    ? rawAvatar 
-    : (rawAvatar?.avatar_url || rawAvatar?.url || rawAvatar?.file?.url || null);
+  const avatarSrc = uploadedAvatarUrl || currentUser.avatar_url || currentUser.avatar || currentUser.avatarUrl || null;
 
   const handleAvatarFileSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -86,30 +88,51 @@ export default function ProfilePage() {
       const res = await uploadService.uploadAvatar(file);
       console.log("API Response: POST /api/uploads/avatar", res);
 
-      const rawUrl = res?.url || res?.data?.avatar_url || res?.data?.file?.url || res?.data?.url || res?.avatarUrl;
+      const rawUrl = res?.avatar_url || res?.url || res?.data?.avatar_url || res?.data?.url || res?.file?.url || res?.avatarUrl;
       const newAvatarUrl = typeof rawUrl === 'string' ? rawUrl : (rawUrl?.avatar_url || rawUrl?.url || null);
       
       if (!newAvatarUrl) {
         throw new Error("Serverdan rasm URL havolasi qaytmadi");
       }
 
-      // Update user state with real server HTTPS URL
-      const updatedUser = {
-        ...currentUser,
+      // 1. Update local state immediately
+      setUploadedAvatarUrl(newAvatarUrl);
+
+      // 2. Update global user state with real server HTTPS URL
+      setUser(prev => ({
+        ...(prev || {}),
+        avatar_url: newAvatarUrl,
         avatar: newAvatarUrl,
         avatarUrl: newAvatarUrl
-      };
-      setUser(updatedUser);
-      localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+      }));
+
+      try {
+        const savedUser = JSON.parse(localStorage.getItem('visitca_user') || '{}');
+        localStorage.setItem('visitca_user', JSON.stringify({
+          ...savedUser,
+          avatar_url: newAvatarUrl,
+          avatar: newAvatarUrl,
+          avatarUrl: newAvatarUrl
+        }));
+      } catch (storageErr) {
+        console.warn("Storage save error:", storageErr);
+      }
+
       setAvatarSuccess("Profil rasmi muvaffaqiyatli yangilandi");
 
-      // Refetch profile GET /api/b2c/auth/me to stay in sync
+      // 3. Refetch profile GET /api/b2c/auth/me to stay in sync
       try {
         const meRes = await authService.getMe();
         if (meRes) {
           const freshUser = meRes.user || meRes.data || meRes;
-          setUser(freshUser);
-          localStorage.setItem('visitca_user', JSON.stringify(freshUser));
+          const freshUrl = freshUser.avatar_url || freshUser.avatar || freshUser.avatarUrl || newAvatarUrl;
+          setUploadedAvatarUrl(freshUrl);
+          setUser(prev => ({
+            ...(freshUser || {}),
+            avatar_url: freshUrl,
+            avatar: freshUrl,
+            avatarUrl: freshUrl
+          }));
         }
       } catch (meErr) {
         console.warn("Profile refetch notice:", meErr);
@@ -149,8 +172,15 @@ export default function ProfilePage() {
 
               <div className="relative inline-block mb-4 group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <div className="h-24 w-24 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto border-4 border-white dark:border-neutral-800 shadow-md overflow-hidden relative">
-                  {userAvatar ? (
-                    <img src={userAvatar} alt={currentUser.name || 'User'} className="h-full w-full object-cover" />
+                  {avatarSrc ? (
+                    <img 
+                      src={avatarSrc} 
+                      alt={currentUser.name || currentUser.fullName || currentUser.email || "Profil rasmi"} 
+                      className="h-full w-full object-cover border-2 border-emerald-500 shadow-sm"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
                   ) : (
                     <UserIcon className="h-10 w-10 text-neutral-400" />
                   )}
