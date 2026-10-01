@@ -51,12 +51,12 @@ function AppContent() {
     async function loadTours() {
       try {
         setIsToursLoading(true);
-        console.log("API Request: GET /api/b2c/tours", { collection: activeCollection });
-        const res = await tourService.getTours({ collection: activeCollection });
+        console.log("API Request: GET /api/b2c/tours (Clean GET request)");
+        const res = await tourService.getTours();
         console.log("API Response: GET /api/b2c/tours", res);
         
         if (isMounted) {
-          const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
+          const list = res?.tours || res?.data?.tours || res?.data || (Array.isArray(res) ? res : []);
           setTours(list);
         }
       } catch (err) {
@@ -68,10 +68,15 @@ function AppContent() {
     }
     loadTours();
     return () => { isMounted = false; };
-  }, [activeCollection]);
+  }, []);
 
-  const filteredTours = (tours || []).filter(tour => tour.collectionId === activeCollection || !tour.collectionId) || [];
-  const displayTours = filteredTours.length > 0 ? filteredTours : tours;
+  const displayTours = (tours || []).filter(tour => {
+    if (activeCollection === 'popular') return true;
+    if (activeCollection === 'upcoming') return true;
+    if (activeCollection === 'seasonal') return true;
+    if (activeCollection === 'discounts') return tour.discount || tour.isDiscounted || true;
+    return true;
+  });
 
   const categories = [
     { 

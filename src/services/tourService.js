@@ -8,7 +8,15 @@ const tourService = {
    */
   getTours: async (params = {}) => {
     try {
-      const response = await api.get('/api/b2c/tours', { params });
+      const cleanParams = {};
+      Object.keys(params || {}).forEach(key => {
+        const val = params[key];
+        if (val !== undefined && val !== null && val !== '') {
+          cleanParams[key] = val;
+        }
+      });
+      const response = await api.get('/api/b2c/tours', { params: cleanParams });
+      console.log('REAL TOURS API RAW RESPONSE:', response.data);
       return response.data;
     } catch (error) {
       console.error('getTours error:', error);
