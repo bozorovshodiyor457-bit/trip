@@ -104,41 +104,16 @@ export default function AuthModal({ isOpen, onClose }) {
     onClose();
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await authService.loginWithGoogle();
-      // Haqiqiy API da bu joyda OAuth URL qaytadi va redirect qilinadi
-      // window.location.href = data.url;
-    } catch (error) {
-      console.log('Google login (mocking fallback): ', error);
-    }
-    // Mock muvaffaqiyat
-    const userData = {
-      name: 'Google User',
-      email: 'user@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80'
-    };
-    setUser(userData);
-    localStorage.setItem('visitca_user', JSON.stringify(userData));
-    onClose();
+  const handleGoogleLogin = () => {
+    // Haqiqiy backend OAuth manziliga yo'naltirish
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://visitca-trip-backendv1-production.up.railway.app';
+    window.location.href = `${baseUrl}/auth/google`;
   };
 
-  const handleTelegramLogin = async () => {
-    try {
-      await authService.loginWithTelegram();
-      // Telegram login odatda maxsus widget orqali qilinadi, API dan widget info yoki URL qaytadi
-    } catch (error) {
-      console.log('Telegram login (mocking fallback): ', error);
-    }
-    // Mock muvaffaqiyat
-    const userData = {
-      name: 'Telegram User',
-      phone: '+998 90 000 0000',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80'
-    };
-    setUser(userData);
-    localStorage.setItem('visitca_user', JSON.stringify(userData));
-    onClose();
+  const handleTelegramLogin = () => {
+    // Haqiqiy backend Telegram OAuth manziliga yo'naltirish
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://visitca-trip-backendv1-production.up.railway.app';
+    window.location.href = `${baseUrl}/auth/telegram`;
   };
 
   return (
