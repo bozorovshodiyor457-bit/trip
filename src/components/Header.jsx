@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
+import interactionService from '../services/interactionService';
 
 const MOCK_NOTIFICATIONS = [
   { id: 1, type: 'success', title: "Bron tasdiqlandi", desc: "Samarqand sayohatiga joyingiz kafolatlandi.", time: "2 soat oldin", read: false },
@@ -25,7 +26,34 @@ export default function Header({ onLoginClick }) {
   const profileRef = useRef(null);
 
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadNotifications() {
+      try {
+        const res = await interactionService.getNotifications();
+        if (isMounted) {
+          const list = res?.notifications || res?.data || (Array.isArray(res) ? res : []);
+          setNotifications(list.length > 0 ? list : MOCK_NOTIFICATIONS);
+        }
+      } catch (err) {
+        console.warn('Notifications fetch error fallback:', err);
+      }
+    }
+    loadNotifications();
+    return () => { isMounted = false; };
+  }, [user]);
+
+  const handleMarkAsRead = async (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    try {
+      await interactionService.markNotificationRead(id);
+    } catch (err) {
+      console.warn('Mark read API error:', err);
+    }
+  };
+
+  const unreadCount = (notifications || []).filter(n => !n.read).length;
 
   const languages = ['UZ', 'RU', 'EN'];
   const currencies = ['UZS', 'USD'];

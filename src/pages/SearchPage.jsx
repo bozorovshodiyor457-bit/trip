@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { Map, List, SlidersHorizontal, ChevronDown, Check, Star, ShieldCheck, MapPin, Clock } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Map, List, SlidersHorizontal, ChevronDown, Check, Star, ShieldCheck, MapPin, Clock, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
 import { useTranslation } from '../utils/i18n';
+import tourService from '../services/tourService';
 
-// Mock Tours for Search Page
+// Fallback Mock Tours for Search Page if API is empty
 const MOCK_TOURS = [
   {
     id: 1,
@@ -13,9 +14,9 @@ const MOCK_TOURS = [
     rating: 4.9,
     priceUZS: 450000,
     durationStr: "2 kun",
-    durationType: "multi_day", // hours, 1_day, multi_day
-    format: "group", // group, individual
-    organizerType: "operator", // guide, operator
+    durationType: "multi_day",
+    format: "group",
+    organizerType: "operator",
     isVerified: true,
     languages: ["UZ", "RU"],
     freeCancellation: true,
@@ -76,24 +77,6 @@ const MOCK_TOURS = [
     transferIncluded: true,
     lat: 39.96, lng: 68.39,
     popularity: 82
-  },
-  {
-    id: 5,
-    title: "Toshkent City va eski shahar",
-    location: "Toshkent",
-    image: "https://picsum.photos/seed/tour9/800/600",
-    rating: 4.1,
-    priceUZS: 120000,
-    durationStr: "4 soat",
-    durationType: "hours",
-    format: "individual",
-    organizerType: "guide",
-    isVerified: true,
-    languages: ["UZ", "EN"],
-    freeCancellation: false,
-    transferIncluded: false,
-    lat: 41.311, lng: 69.24,
-    popularity: 60
   }
 ];
 
@@ -102,6 +85,8 @@ export default function SearchPage() {
   const t = useTranslation(language);
   const [showMap, setShowMap] = useState(false);
   const [hoveredTourId, setHoveredTourId] = useState(null);
+  const [apiTours, setApiTours] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -117,6 +102,27 @@ export default function SearchPage() {
 
   const [sortBy, setSortBy] = useState('popularity'); // popularity, price_asc, price_desc, rating
 
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchSearchTours() {
+      try {
+        setIsLoading(true);
+        const res = showMap ? await tourService.getToursMap() : await tourService.getTours({ sort: sortBy });
+        if (isMounted) {
+          const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
+          setApiTours(list.length > 0 ? list : MOCK_TOURS);
+        }
+      } catch (err) {
+        console.warn('SearchPage tour fetch error, using fallback:', err);
+        if (isMounted) setApiTours(MOCK_TOURS);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    fetchSearchTours();
+    return () => { isMounted = false; };
+  }, [sortBy, showMap]);
+
   // Handle Filter Changes
   const handleCheckboxChange = (filterKey, value) => {
     setFilters(prev => {
@@ -130,17 +136,20 @@ export default function SearchPage() {
 
   // Filter & Sort Logic
   const filteredTours = useMemo(() => {
-    let result = MOCK_TOURS.filter(tour => {
-      if (filters.format.length && !filters.format.includes(tour.format)) return false;
-      if (filters.organizerType.length && !filters.organizerType.includes(tour.organizerType)) return false;
-      if (filters.durationType.length && !filters.durationType.includes(tour.durationType)) return false;
+    const source = (apiTours && apiTours.length > 0) ? apiTours : MOCK_TOURS;
+    let result = source.filter(tour => {
+      if (filters.format.length && tour.format && !filters.format.includes(tour.format)) return false;
+      if (filters.organizerType.length && tour.organizerType && !filters.organizerType.includes(tour.organizerType)) return false;
+      if (filters.durationType.length && tour.durationType && !filters.durationType.includes(tour.durationType)) return false;
       
+      const price = tour.priceUZS || tour.price || 0;
       const minP = parseFloat(filters.minPrice);
       const maxP = parseFloat(filters.maxPrice);
-      if (!isNaN(minP) && tour.priceUZS < minP) return false;
-      if (!isNaN(maxP) && tour.priceUZS > maxP) return false;
+      if (!isNaN(minP) && price < minP) return false;
+      if (!isNaN(maxP) && price > maxP) return false;
 
-      if (filters.rating && tour.rating < filters.rating) return false;
+      const rat = tour.rating || 5;
+      if (filters.rating && rat < filters.rating) return false;
       if (filters.freeCancellation && !tour.freeCancellation) return false;
       if (filters.transferIncluded && !tour.transferIncluded) return false;
       
@@ -148,15 +157,22 @@ export default function SearchPage() {
     });
 
     result.sort((a, b) => {
-      if (sortBy === 'popularity') return b.popularity - a.popularity;
-      if (sortBy === 'price_asc') return a.priceUZS - b.priceUZS;
-      if (sortBy === 'price_desc') return b.priceUZS - a.priceUZS;
-      if (sortBy === 'rating') return b.rating - a.rating;
+      const priceA = a.priceUZS || a.price || 0;
+      const priceB = b.priceUZS || b.price || 0;
+      const popA = a.popularity || 80;
+      const popB = b.popularity || 80;
+      const ratA = a.rating || 5;
+      const ratB = b.rating || 5;
+
+      if (sortBy === 'popularity') return popB - popA;
+      if (sortBy === 'price_asc') return priceA - priceB;
+      if (sortBy === 'price_desc') return priceB - priceA;
+      if (sortBy === 'rating') return ratB - ratA;
       return 0;
     });
 
     return result;
-  }, [filters, sortBy]);
+  }, [apiTours, filters, sortBy]);
 
   const displayPrice = (priceUZS) => {
     return currency === 'UZS' 

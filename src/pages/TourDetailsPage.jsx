@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Star, MapPin, Clock, Globe, Check, X, ShieldCheck, Heart, Share, Calendar, Users, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Star, MapPin, Clock, Globe, Check, X, ShieldCheck, Heart, Share, Calendar, Users, MessageCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import tourService from '../services/tourService';
+import reviewService from '../services/reviewService';
+import interactionService from '../services/interactionService';
+import chatService from '../services/chatService';
 
 const MOCK_TOUR = {
   id: 1,
@@ -44,9 +48,94 @@ const MOCK_TOUR = {
 };
 
 export default function TourDetailsPage() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('group'); // group, individual
   const [openDay, setOpenDay] = useState(0);
+  const [tour, setTour] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isChatStarting, setIsChatStarting] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTourData() {
+      if (!id) {
+        setTour(MOCK_TOUR);
+        setIsLoading(false);
+        return;
+      }
+      try {
+        setIsLoading(true);
+        const data = await tourService.getTourById(id);
+        if (isMounted) {
+          const detail = data?.tour || data?.data || data || MOCK_TOUR;
+          setTour(detail);
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch tour ${id}, using fallback:`, err);
+        if (isMounted) setTour(MOCK_TOUR);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+
+      try {
+        const revData = await reviewService.getTourReviews(id);
+        if (isMounted) {
+          setReviews(revData?.reviews || revData?.data || []);
+        }
+      } catch (err) {
+        console.warn('Reviews fetch error:', err);
+      }
+    }
+    loadTourData();
+    return () => { isMounted = false; };
+  }, [id]);
+
+  const handleToggleFav = async () => {
+    setIsFavorite(!isFavorite);
+    try {
+      if (id) await interactionService.toggleFavorite(id);
+    } catch (err) {
+      console.warn('Toggle favorite error:', err);
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    setIsChatStarting(true);
+    try {
+      const currentTour = tour || MOCK_TOUR;
+      const res = await chatService.startChat({
+        tourId: id || currentTour.id,
+        organizerId: currentTour.organizer?._id || currentTour.organizer?.id,
+        initialMessage: `Salom! "${currentTour.title}" turi bo'yicha savolim bor edi.`
+      });
+      const chatId = res?.chat?._id || res?._id || res?.id;
+      if (chatId) {
+        navigate(`/chat?id=${chatId}`);
+      } else {
+        navigate('/chat');
+      }
+    } catch (err) {
+      console.warn('Start chat error, opening chat page:', err);
+      navigate('/chat');
+    } finally {
+      setIsChatStarting(false);
+    }
+  };
+
+  const activeTour = tour || MOCK_TOUR;
+  const tourTitle = activeTour.title || MOCK_TOUR.title;
+  const tourPrice = activeTour.priceUZS || activeTour.price || 450000;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 pb-32 sm:pb-8">

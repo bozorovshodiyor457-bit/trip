@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
@@ -19,6 +19,7 @@ import ProfilePage from './pages/ProfilePage';
 import SeoDestinationPage from './pages/SeoDestinationPage';
 import PartnersPage from './pages/PartnersPage';
 import BookingStatusPage from './pages/BookingStatusPage';
+import tourService from './services/tourService';
 import { 
   Mountain, 
   Landmark, 
@@ -29,7 +30,8 @@ import {
   Headphones, 
   CalendarCheck,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 // Mock Data for Home Page Collections
@@ -120,10 +122,33 @@ function AppContent() {
   const t = useTranslation(language);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [activeCollection, setActiveCollection] = useState('popular');
+  const [tours, setTours] = useState([]);
+  const [isToursLoading, setIsToursLoading] = useState(true);
   const navigate = useNavigate();
 
-  const filteredTours = MOCK_TOURS.filter(tour => tour.collectionId === activeCollection) || [];
-  const displayTours = filteredTours.length > 0 ? filteredTours : MOCK_TOURS;
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTours() {
+      try {
+        setIsToursLoading(true);
+        const res = await tourService.getTours();
+        if (isMounted) {
+          const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
+          setTours(list.length > 0 ? list : MOCK_TOURS);
+        }
+      } catch (err) {
+        console.warn('Failed to load tours from API, using fallback:', err);
+        if (isMounted) setTours(MOCK_TOURS);
+      } finally {
+        if (isMounted) setIsToursLoading(false);
+      }
+    }
+    loadTours();
+    return () => { isMounted = false; };
+  }, []);
+
+  const filteredTours = (tours || []).filter(tour => tour.collectionId === activeCollection || !tour.collectionId) || [];
+  const displayTours = filteredTours.length > 0 ? filteredTours : tours;
 
   const categories = [
     { 
@@ -295,13 +320,19 @@ function AppContent() {
               </div>
 
               {/* Tour Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {displayTours.map((tour) => (
-                  <div key={tour.id} onClick={() => navigate(`/tour/${tour.id}`)}>
-                    <TourCard tour={tour} />
-                  </div>
-                ))}
-              </div>
+              {isToursLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {(displayTours || []).map((tour) => (
+                    <div key={tour._id || tour.id} onClick={() => navigate(`/tour/${tour._id || tour.id}`)}>
+                      <TourCard tour={tour} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* 4. Trust Elements Section */}

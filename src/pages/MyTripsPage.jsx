@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Calendar, MapPin, QrCode, Phone, MessageCircle, AlertTriangle, ChevronRight, X, CalendarPlus, Download, User as UserIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, MapPin, QrCode, Phone, MessageCircle, AlertTriangle, ChevronRight, X, CalendarPlus, Download, User as UserIcon, Loader2 } from 'lucide-react';
 import ReviewModal from '../components/ReviewModal';
+import bookingService from '../services/bookingService';
+import reviewService from '../services/reviewService';
 
 const MOCK_TRIPS = [
   {
@@ -28,19 +30,6 @@ const MOCK_TRIPS = [
     meetingPoint: "Labihovuz majmuasi",
     bookingId: "VT-109283",
     refundPolicy: "0%",
-  },
-  {
-    id: 3,
-    status: 'canceled',
-    title: "Ichan Qal'a - Ochiq osmon ostidagi muzey",
-    date: "2026-08-10",
-    time: "10:00",
-    guests: "3 ta katta",
-    price: 1950000,
-    guide: { name: "Murod Aliyev", phone: "+998 99 111 22 33", avatar: "https://i.pravatar.cc/150?u=murod" },
-    meetingPoint: "Ota Darvoza",
-    bookingId: "VT-563821",
-    refundPolicy: "100%",
   }
 ];
 
@@ -50,8 +39,52 @@ export default function MyTripsPage() {
   const [activeManage, setActiveManage] = useState(null); // Cancel/Reschedule Modal
   const [manageAction, setManageAction] = useState('cancel'); // 'cancel' or 'reschedule'
   const [reviewTour, setReviewTour] = useState(null); // Tour to review
+  const [trips, setTrips] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredTrips = MOCK_TRIPS.filter(t => t.status === activeTab);
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchTrips() {
+      try {
+        setIsLoading(true);
+        const res = await bookingService.getMyTrips();
+        if (isMounted) {
+          const list = res?.trips || res?.data || (Array.isArray(res) ? res : []);
+          setTrips(list.length > 0 ? list : MOCK_TRIPS);
+        }
+      } catch (err) {
+        console.warn('MyTrips API error fallback:', err);
+        if (isMounted) setTrips(MOCK_TRIPS);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    fetchTrips();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleCancelBooking = async (tripId) => {
+    try {
+      await bookingService.cancelBooking(tripId, { reason: 'Foydalanuvchi bekor qildi' });
+      setTrips(prev => prev.map(t => t.id === tripId ? { ...t, status: 'canceled' } : t));
+      setActiveManage(null);
+    } catch (err) {
+      console.warn('Cancel booking error fallback:', err);
+      setTrips(prev => prev.map(t => t.id === tripId ? { ...t, status: 'canceled' } : t));
+      setActiveManage(null);
+    }
+  };
+
+  const allTrips = (trips && trips.length > 0) ? trips : MOCK_TRIPS;
+  const filteredTrips = allTrips.filter(t => t.status === activeTab);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">

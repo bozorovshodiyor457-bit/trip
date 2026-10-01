@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Heart, Share, Star, MapPin, Clock, Copy, Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, Share, Star, MapPin, Clock, Copy, Send, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppProvider';
+import interactionService from '../services/interactionService';
 
 const INITIAL_FAVORITES = [
   {
@@ -28,11 +29,38 @@ const INITIAL_FAVORITES = [
 export default function FavoritesPage() {
   const { currency } = useAppContext();
   const [favorites, setFavorites] = useState(INITIAL_FAVORITES);
+  const [isLoading, setIsLoading] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
 
-  const handleRemove = (id) => {
-    setFavorites(favorites.filter(t => t.id !== id));
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFavorites() {
+      try {
+        setIsLoading(true);
+        const res = await interactionService.getFavorites();
+        if (isMounted) {
+          const list = res?.favorites || res?.data || (Array.isArray(res) ? res : []);
+          setFavorites(list.length > 0 ? list : INITIAL_FAVORITES);
+        }
+      } catch (err) {
+        console.warn('Favorites API error fallback:', err);
+        if (isMounted) setFavorites(INITIAL_FAVORITES);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadFavorites();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleRemove = async (id) => {
+    setFavorites(prev => prev.filter(t => (t._id || t.id) !== id));
+    try {
+      await interactionService.toggleFavorite(id);
+    } catch (err) {
+      console.warn('Remove favorite API error:', err);
+    }
   };
 
   const handleShare = (tour) => {
@@ -47,9 +75,17 @@ export default function FavoritesPage() {
 
   const displayPrice = (priceUZS) => {
     return currency === 'UZS' 
-      ? `${priceUZS.toLocaleString('uz-UZ')} so'm` 
-      : `$${Math.round(priceUZS / 12500)}`;
+      ? `${(priceUZS || 0).toLocaleString('uz-UZ')} so'm` 
+      : `$${Math.round((priceUZS || 0) / 12500)}`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400" />
+      </div>
+    );
+  }
 
   if (favorites.length === 0) {
     return (

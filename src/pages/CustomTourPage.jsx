@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Send, MapPin, Calendar, Users, Wallet, Target, Globe } from 'lucide-react';
+import { Send, MapPin, Calendar, Users, Wallet, Target, Globe, Loader2 } from 'lucide-react';
+import interactionService from '../services/interactionService';
 
 export default function CustomTourPage() {
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     destination: '',
     date: '',
@@ -12,9 +14,17 @@ export default function CustomTourPage() {
     language: 'UZ'
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStep(2); // Show confirmation/offers
+    setIsLoading(true);
+    try {
+      await interactionService.submitCustomRequest(formData);
+    } catch (err) {
+      console.warn('Custom request API error fallback:', err);
+    } finally {
+      setIsLoading(false);
+      setStep(2); // Show confirmation/offers
+    }
   };
 
   return (

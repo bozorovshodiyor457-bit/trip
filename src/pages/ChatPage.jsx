@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Send, Image as ImageIcon, MapPin, Search, Check, CheckCheck, MoreVertical, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Image as ImageIcon, MapPin, Search, Check, CheckCheck, MoreVertical, Phone, Loader2 } from 'lucide-react';
+import chatService from '../services/chatService';
 
 const MOCK_DIALOGS = [
   {
@@ -32,31 +33,77 @@ const INITIAL_MESSAGES = [
 ];
 
 export default function ChatPage() {
+  const [dialogs, setDialogs] = useState(MOCK_DIALOGS);
   const [activeDialog, setActiveDialog] = useState(MOCK_DIALOGS[0]);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSend = (e) => {
+  useEffect(() => {
+    let isMounted = true;
+    async function loadChats() {
+      try {
+        setIsLoading(true);
+        const res = await chatService.getMyChats();
+        if (isMounted) {
+          const list = res?.chats || res?.data || (Array.isArray(res) ? res : []);
+          if (list.length > 0) {
+            setDialogs(list);
+            setActiveDialog(list[0]);
+          }
+        }
+      } catch (err) {
+        console.warn('My chats API error fallback:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadChats();
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const chatId = activeDialog?._id || activeDialog?.id;
+    if (!chatId) return;
+
+    async function loadMessages() {
+      try {
+        const res = await chatService.getChatMessages(chatId);
+        if (isMounted) {
+          const list = res?.messages || res?.data || (Array.isArray(res) ? res : []);
+          if (list.length > 0) setMessages(list);
+        }
+      } catch (err) {
+        console.warn(`Chat messages error for ${chatId}:`, err);
+      }
+    }
+    loadMessages();
+    return () => { isMounted = false; };
+  }, [activeDialog]);
+
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
     
-    setMessages([...messages, {
+    const textToSend = inputText.trim();
+    const newMsg = {
       id: Date.now(),
-      text: inputText,
+      text: textToSend,
       sender: 'me',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
+    };
+    setMessages(prev => [...prev, newMsg]);
     setInputText('');
     
-    // Auto-reply mock
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        text: "Tushunarli, aytganingizdek qilamiz.",
-        sender: 'them',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-    }, 1500);
+    const chatId = activeDialog?._id || activeDialog?.id;
+    try {
+      if (chatId) {
+        await chatService.sendMessage(chatId, { text: textToSend });
+      }
+    } catch (err) {
+      console.warn('Send message API error fallback:', err);
+    }
   };
 
   return (
