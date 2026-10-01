@@ -1,5 +1,33 @@
 import api from './api';
 
+// Helper to format payload properly according to identifier type (Phone vs Email)
+function buildAuthPayload(identifier, extraData = {}) {
+  const str = String(identifier || '').trim();
+  const isEmail = str.includes('@');
+  
+  if (isEmail) {
+    return {
+      identifier: str,
+      email: str,
+      type: 'email',
+      ...extraData
+    };
+  } else {
+    // Clean phone to E.164 format: +998901234567
+    let digits = str.replace(/\D/g, '');
+    if (digits.length === 9) {
+      digits = '998' + digits;
+    }
+    const cleanPhone = digits.startsWith('+') ? digits : `+${digits}`;
+    return {
+      identifier: cleanPhone,
+      phone: cleanPhone,
+      type: 'phone',
+      ...extraData
+    };
+  }
+}
+
 const authService = {
   /**
    * 1-qadam: OTP yuborish (Send OTP)
@@ -8,14 +36,13 @@ const authService = {
    */
   sendOtp: async (identifier) => {
     try {
-      const response = await api.post('/api/b2c/auth/send-otp', { 
-        identifier: identifier,
-        phone: identifier,
-        email: identifier 
-      });
+      const payload = buildAuthPayload(identifier);
+      console.log("Sending OTP payload:", payload);
+      const response = await api.post('/api/b2c/auth/send-otp', payload);
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      console.error("sendOtp API error:", error);
+      throw error;
     }
   },
 
@@ -27,14 +54,12 @@ const authService = {
    */
   verifyOtp: async (identifier, code) => {
     try {
-      const response = await api.post('/api/b2c/auth/verify-otp', { 
-        identifier: identifier,
-        phone: identifier,
-        email: identifier,
-        code: code 
-      });
+      const payload = buildAuthPayload(identifier, { code: String(code).trim() });
+      console.log("Verifying OTP payload:", payload);
+      const response = await api.post('/api/b2c/auth/verify-otp', payload);
       return response.data;
     } catch (error) {
+      console.error("verifyOtp API error:", error);
       throw error.response?.data || error;
     }
   },

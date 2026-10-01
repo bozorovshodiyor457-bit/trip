@@ -134,7 +134,8 @@ export default function AuthModal({ isOpen, onClose }) {
         setErrorMsg("Telefon raqamini to'liq kiriting");
         return;
       }
-      identifier = `+998${rawDigits}`;
+      const phoneDigits = rawDigits.length === 9 ? `998${rawDigits}` : rawDigits;
+      identifier = phoneDigits.startsWith('+') ? phoneDigits : `+${phoneDigits}`;
     } else {
       if (!email.trim() || !email.includes('@')) {
         setErrorMsg("E-mail manzilini to'g'ri kiriting");
@@ -145,14 +146,18 @@ export default function AuthModal({ isOpen, onClose }) {
 
     setIsLoading(true);
     try {
-      await authService.sendOtp(identifier);
+      const res = await authService.sendOtp(identifier);
+      if (res && res.success === false) {
+        const message = res.message || res.error || "Noto'g'ri telefon raqami yoki email kiritildi";
+        setErrorMsg(message);
+        return;
+      }
       setSuccessMsg("Kod yuborildi! Email yoki Telegramingizga kelgan kodni kiriting.");
       setStep(2);
-    } catch (error) {
-      console.error("OTP send error:", error);
-      // Proceed to Step 2 with info message even if backend demo sandbox
-      setSuccessMsg("Kod yuborildi! Email yoki Telegramingizga kelgan kodni kiriting.");
-      setStep(2);
+    } catch (err) {
+      console.error("OTP send error:", err);
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || "Noto'g'ri telefon raqami yoki email kiritildi";
+      setErrorMsg(message);
     } finally {
       setIsLoading(false);
     }
@@ -217,10 +222,11 @@ export default function AuthModal({ isOpen, onClose }) {
       setStep(1);
       setCode('');
       setErrorMsg('');
-    } catch (error) {
-      console.error("OTP verify error:", error);
+    } catch (err) {
+      console.error("OTP verify error:", err);
       setIsLoading(false);
-      setErrorMsg(error.message || error.detail || "Noto'g'ri kod kiritildi yoki serverda xatolik yuz berdi");
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || "Noto'g'ri kod kiritildi yoki serverda xatolik yuz berdi";
+      setErrorMsg(message);
     }
   };
 
