@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Map, List, SlidersHorizontal, ChevronDown, Check, Star, ShieldCheck, MapPin, Clock, Loader2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { useTranslation } from '../utils/i18n';
 import tourService from '../services/tourService';
@@ -83,10 +84,19 @@ const MOCK_TOURS = [
 export default function SearchPage() {
   const { language } = useAppContext();
   const t = useTranslation(language);
+  const locationObj = useLocation();
   const [showMap, setShowMap] = useState(false);
   const [hoveredTourId, setHoveredTourId] = useState(null);
   const [apiTours, setApiTours] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Parse URL Search Query Parameters
+  const searchParams = useMemo(() => new URLSearchParams(locationObj.search), [locationObj.search]);
+  const searchKeyword = searchParams.get('search') || '';
+  const startDateParam = searchParams.get('startDate') || '';
+  const endDateParam = searchParams.get('endDate') || '';
+  const adultsParam = searchParams.get('adults') || '';
+  const childrenParam = searchParams.get('children') || '';
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -107,7 +117,18 @@ export default function SearchPage() {
     async function fetchSearchTours() {
       try {
         setIsLoading(true);
-        const res = showMap ? await tourService.getToursMap() : await tourService.getTours({ sort: sortBy });
+        const queryParams = { 
+          sort: sortBy,
+          ...(searchKeyword ? { search: searchKeyword } : {}),
+          ...(startDateParam ? { startDate: startDateParam } : {}),
+          ...(endDateParam ? { endDate: endDateParam } : {}),
+          ...(adultsParam ? { adults: adultsParam } : {}),
+          ...(childrenParam ? { children: childrenParam } : {})
+        };
+        console.log("API Request: GET /api/b2c/tours (Search)", queryParams);
+        const res = showMap ? await tourService.getToursMap(queryParams) : await tourService.getTours(queryParams);
+        console.log("API Response: GET /api/b2c/tours (Search)", res);
+        
         if (isMounted) {
           const list = res?.tours || res?.data || (Array.isArray(res) ? res : []);
           setApiTours(list.length > 0 ? list : MOCK_TOURS);
@@ -121,7 +142,7 @@ export default function SearchPage() {
     }
     fetchSearchTours();
     return () => { isMounted = false; };
-  }, [sortBy, showMap]);
+  }, [sortBy, showMap, searchKeyword, startDateParam, endDateParam, adultsParam, childrenParam]);
 
   // Handle Filter Changes
   const handleCheckboxChange = (filterKey, value) => {
@@ -138,6 +159,12 @@ export default function SearchPage() {
   const filteredTours = useMemo(() => {
     const source = (apiTours && apiTours.length > 0) ? apiTours : MOCK_TOURS;
     let result = source.filter(tour => {
+      if (searchKeyword) {
+        const q = searchKeyword.toLowerCase();
+        const titleMatch = (tour.title || '').toLowerCase().includes(q);
+        const locMatch = (tour.location || tour.city || '').toLowerCase().includes(q);
+        if (!titleMatch && !locMatch) return false;
+      }
       if (filters.format.length && tour.format && !filters.format.includes(tour.format)) return false;
       if (filters.organizerType.length && tour.organizerType && !filters.organizerType.includes(tour.organizerType)) return false;
       if (filters.durationType.length && tour.durationType && !filters.durationType.includes(tour.durationType)) return false;
