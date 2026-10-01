@@ -159,11 +159,44 @@ export default function TourDetailsPage() {
   }
 
   const tourTitle = tour.title || tour.name || "Sayohat turi";
-  const pricePerPerson = Number(tour.priceUZS || tour.price || tour.price_from || 0);
+
+  // Price Extraction with Comprehensive Fallbacks
+  const rawUnitPrice = Number(
+    tour?.price_uzs ?? 
+    tour?.priceUZS ?? 
+    tour?.price ?? 
+    tour?.price_from ?? 
+    tour?.basePrice ?? 
+    tour?.options?.[0]?.price ?? 
+    tour?.minPrice ?? 
+    450000
+  );
+
+  const optionPrice = activeTab === 'individual'
+    ? (tour?.individualPrice || (rawUnitPrice > 0 ? Math.round(rawUnitPrice * 1.4) : 630000))
+    : rawUnitPrice;
+
+  // Format price helper
+  const formatPrice = (val) => {
+    const num = Number(val) || 0;
+    return `${new Intl.NumberFormat('uz-UZ').format(num)} so'm`;
+  };
+
+  // Format date display helper
+  const formatDisplayDate = (raw) => {
+    if (!raw || raw === "Sanani tanlang" || raw === "Tanlanmagan") return "Sanani tanlang";
+    const cleaned = String(raw).replace(/^Sana\s+/i, '').trim();
+    const d = new Date(cleaned);
+    if (!isNaN(d.getTime())) {
+      const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+      return `${d.getDate()} ${months[d.getMonth()]}`;
+    }
+    return cleaned || "Sanani tanlang";
+  };
 
   // Calculations
-  const totalGuests = adults + childrenCount;
-  const calculatedTotalPrice = pricePerPerson * totalGuests;
+  const totalGuests = Math.max(1, (adults || 1) + (childrenCount || 0));
+  const calculatedTotalPrice = optionPrice * totalGuests;
   const guestsLabel = `${totalGuests} kishi (${adults} katta${childrenCount > 0 ? `, ${childrenCount} bola` : ''})`;
 
   // Extract gallery images safely
@@ -172,6 +205,10 @@ export default function TourDetailsPage() {
     : [tour.image || tour.cover_image || tour.image_url || "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=1200&q=80"];
 
   const handleProceedBooking = () => {
+    if (!selectedDateRange || selectedDateRange === "Sanani tanlang" || selectedDateRange === "Tanlanmagan") {
+      setIsDateModalOpen(true);
+      return;
+    }
     const bookingDetails = {
       tourId: id || tour._id || tour.id || 1,
       title: tourTitle,
@@ -179,7 +216,7 @@ export default function TourDetailsPage() {
       adults,
       children: childrenCount,
       totalGuests,
-      pricePerPerson,
+      pricePerPerson: optionPrice,
       totalPrice: calculatedTotalPrice
     };
     sessionStorage.setItem('currentBooking', JSON.stringify(bookingDetails));
@@ -342,11 +379,11 @@ export default function TourDetailsPage() {
             
             <div className="flex items-baseline justify-between mb-6">
               <div>
-                <span className="text-3xl font-bold text-neutral-900 dark:text-white">{calculatedTotalPrice.toLocaleString('uz-UZ')}</span>
-                <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block sm:inline sm:ml-1">so'm (jami)</span>
+                <span className="text-3xl font-bold text-neutral-900 dark:text-white">{formatPrice(calculatedTotalPrice)}</span>
+                <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block sm:inline sm:ml-1">(jami)</span>
               </div>
               <span className="text-xs text-neutral-400 dark:text-neutral-500">
-                {pricePerPerson.toLocaleString('uz-UZ')} so'm / kishi
+                {formatPrice(optionPrice)} / kishi
               </span>
             </div>
 
@@ -373,7 +410,7 @@ export default function TourDetailsPage() {
               >
                 <div>
                   <p className="text-xs font-bold text-neutral-900 dark:text-white uppercase">Sana</p>
-                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">{selectedDateRange}</p>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">{formatDisplayDate(selectedDateRange)}</p>
                 </div>
                 <Calendar className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -400,7 +437,7 @@ export default function TourDetailsPage() {
               onClick={handleProceedBooking}
               className="w-full bg-emerald-600 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/25 mb-3"
             >
-              Bron qilish ({calculatedTotalPrice.toLocaleString('uz-UZ')} so'm)
+              Bron qilish ({formatPrice(calculatedTotalPrice)})
             </button>
 
             <p className="text-center text-xs text-neutral-400 dark:text-neutral-500 mt-4">Sizdan hozir pul yechilmaydi</p>
@@ -527,7 +564,7 @@ export default function TourDetailsPage() {
 
             <div className="p-3 mb-6 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl flex justify-between items-center text-xs font-semibold text-emerald-800 dark:text-emerald-300">
               <span>Hisoblangan summa:</span>
-              <span className="text-sm font-extrabold">{calculatedTotalPrice.toLocaleString('uz-UZ')} so'm</span>
+              <span className="text-sm font-extrabold">{formatPrice(calculatedTotalPrice)}</span>
             </div>
 
             <button
@@ -543,7 +580,7 @@ export default function TourDetailsPage() {
       {/* Mobile Sticky CTA Bar */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl flex justify-between items-center gap-4">
         <div>
-          <span className="text-xl font-black text-neutral-900 dark:text-white">{calculatedTotalPrice.toLocaleString('uz-UZ')}</span>
+          <span className="text-xl font-black text-neutral-900 dark:text-white">{formatPrice(calculatedTotalPrice)}</span>
           <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block">{guestsLabel}</span>
         </div>
         <button 
