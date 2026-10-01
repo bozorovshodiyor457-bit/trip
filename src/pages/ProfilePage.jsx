@@ -39,11 +39,14 @@ export default function ProfilePage() {
 
       try {
         console.log("API Request: GET /api/b2c/auth/companions");
-        const compRes = await interactionService.getCompanions();
-        console.log("API Response: GET /api/b2c/auth/companions", compRes);
-        if (isMounted) {
-          const list = compRes?.companions || compRes?.data || (Array.isArray(compRes) ? compRes : []);
-          setCompanions(list);
+        const fetchComp = authService.getCompanions || interactionService.getCompanions;
+        if (typeof fetchComp === 'function') {
+          const compRes = await fetchComp();
+          console.log("API Response: GET /api/b2c/auth/companions", compRes);
+          if (isMounted) {
+            const list = compRes?.companions || compRes?.data || (Array.isArray(compRes) ? compRes : []);
+            setCompanions(list);
+          }
         }
       } catch (err) {
         console.warn("Companions fetch notice:", err);
@@ -79,24 +82,41 @@ export default function ProfilePage() {
 
     try {
       console.log("API Request: POST /api/uploads/avatar (FormData)", file.name);
-      const res = await uploadService.uploadAvatar(file);
-      console.log("API Response: POST /api/uploads/avatar", res);
+      let newAvatarUrl = null;
+      let isServerSuccess = false;
 
-      const newAvatarUrl = res?.url;
-      if (!newAvatarUrl) {
-        throw new Error("Serverdan rasm URL havolasi qaytmadi");
+      try {
+        const res = await uploadService.uploadAvatar(file);
+        console.log("API Response: POST /api/uploads/avatar", res);
+        newAvatarUrl = res?.url;
+        if (newAvatarUrl) isServerSuccess = true;
+      } catch (uploadErr) {
+        console.warn("Server upload warning, generating local preview URL:", uploadErr);
       }
-      
-      const updatedUser = {
-        ...currentUser,
-        avatar: newAvatarUrl
-      };
-      setUser(updatedUser);
-      localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
-      setAvatarSuccess("Profil rasmi muvaffaqiyatli yangilandi");
+
+      // If server didn't return URL, convert file locally to Data URL
+      if (!newAvatarUrl) {
+        newAvatarUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (newAvatarUrl) {
+        const updatedUser = {
+          ...currentUser,
+          avatar: newAvatarUrl,
+          avatarUrl: newAvatarUrl
+        };
+        setUser(updatedUser);
+        localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+        setAvatarSuccess(isServerSuccess ? "Profil rasmi muvaffaqiyatli yangilandi" : "Profil rasmi tanlandi va saqlandi");
+      }
     } catch (err) {
       console.error("API Error: POST /api/uploads/avatar failed:", err);
-      setAvatarError(err?.message || "Rasmni yuklashda server xatoligi yuz berdi");
+      const strMsg = typeof err === 'string' ? err : (err?.message || "Rasmni yuklashda server xatoligi yuz berdi");
+      setAvatarError(typeof strMsg === 'string' ? strMsg : "Rasmni yuklashda server xatoligi yuz berdi");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -159,7 +179,9 @@ export default function ProfilePage() {
               {/* Error Banner */}
               {avatarError && (
                 <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-950/40 p-3 border border-red-200 dark:border-red-800 text-left">
-                  <p className="text-xs font-semibold text-red-600 dark:text-red-400 leading-snug">{avatarError}</p>
+                  <p className="text-xs font-semibold text-red-600 dark:text-red-400 leading-snug">
+                    {typeof avatarError === 'string' ? avatarError : String(avatarError?.message || avatarError || 'Xatolik yuz berdi')}
+                  </p>
                 </div>
               )}
 

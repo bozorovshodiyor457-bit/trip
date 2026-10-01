@@ -10,27 +10,34 @@ const uploadService = {
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      // Swagger & Multer field names ('file' primary, 'avatar', 'image')
       formData.append('file', file);
-      formData.append('avatar', file);
-      formData.append('image', file);
 
-      // Do NOT set 'Content-Type': 'multipart/form-data' explicitly!
-      // Let Axios compute the boundary header automatically!
       const config = {};
       if (token) {
         config.headers = { Authorization: `Bearer ${token}` };
       }
 
-      const response = await api.post('/api/uploads/avatar', formData, config);
+      let response;
+      try {
+        response = await api.post('/api/uploads/avatar', formData, config);
+      } catch (err1) {
+        // Fallback: If 'file' field name gives 400, try 'avatar' field name
+        if (err1.response?.status === 400) {
+          const formData2 = new FormData();
+          formData2.append('avatar', file);
+          response = await api.post('/api/uploads/avatar', formData2, config);
+        } else {
+          throw err1;
+        }
+      }
 
-      // Extract image URL from response
       const data = response.data;
-      const avatarUrl = data.url || data.avatarUrl || data.fileUrl || data.avatar || data.data?.url || data.path;
+      const avatarUrl = data?.url || data?.avatarUrl || data?.fileUrl || data?.avatar || data?.data?.url || data?.path;
       return { success: true, url: avatarUrl, data };
     } catch (error) {
       console.error('Upload Error Details:', error.response?.data || error.message || error);
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Avatar yuklashda server xatoligi yuz berdi";
+      const rawMsg = error.response?.data?.message || error.response?.data?.error || error.message;
+      const errorMsg = typeof rawMsg === 'string' ? rawMsg : (rawMsg?.message || "Avatar yuklashda server xatoligi yuz berdi");
       throw { success: false, message: errorMsg, originalError: error };
     }
   },
@@ -45,21 +52,32 @@ const uploadService = {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('document', file);
 
       const config = {};
       if (token) {
         config.headers = { Authorization: `Bearer ${token}` };
       }
 
-      const response = await api.post('/api/uploads/document', formData, config);
+      let response;
+      try {
+        response = await api.post('/api/uploads/document', formData, config);
+      } catch (err1) {
+        if (err1.response?.status === 400) {
+          const formData2 = new FormData();
+          formData2.append('document', file);
+          response = await api.post('/api/uploads/document', formData2, config);
+        } else {
+          throw err1;
+        }
+      }
 
       const data = response.data;
-      const docUrl = data.url || data.documentUrl || data.fileUrl || data.data?.url || data.path;
+      const docUrl = data?.url || data?.documentUrl || data?.fileUrl || data?.data?.url || data?.path;
       return { success: true, url: docUrl, data };
     } catch (error) {
       console.error('Upload Error Details:', error.response?.data || error.message || error);
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Hujjat yuklashda server xatoligi yuz berdi";
+      const rawMsg = error.response?.data?.message || error.response?.data?.error || error.message;
+      const errorMsg = typeof rawMsg === 'string' ? rawMsg : (rawMsg?.message || "Hujjat yuklashda server xatoligi yuz berdi");
       throw { success: false, message: errorMsg, originalError: error };
     }
   }

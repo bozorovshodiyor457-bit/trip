@@ -78,6 +78,22 @@ const authService = {
   },
 
   /**
+   * GET /api/b2c/auth/companions
+   * Get saved companions
+   */
+  getCompanions: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const response = await api.get('/api/b2c/auth/companions', config);
+      return response.data;
+    } catch (error) {
+      console.warn("getCompanions notice:", error.message || error);
+      return [];
+    }
+  },
+
+  /**
    * Telefon raqamiga SMS jo'natish
    */
   sendLoginCode: async (phone) => {

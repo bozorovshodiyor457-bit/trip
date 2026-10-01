@@ -85,6 +85,20 @@ const interactionService = {
       console.error(`markNotificationRead (${id}) error:`, error);
       throw error.response?.data || error;
     }
+  },
+
+  /**
+   * GET /api/b2c/auth/companions
+   * Get user companions
+   */
+  getCompanions: async () => {
+    try {
+      const response = await api.get('/api/b2c/auth/companions');
+      return response.data;
+    } catch (error) {
+      console.warn('getCompanions error:', error);
+      return [];
+    }
   }
 };
 
