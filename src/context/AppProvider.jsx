@@ -9,7 +9,8 @@ export const AppProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('language') || 'uz';
   }); 
-  const [currency, setCurrency] = useState('UZS'); // 'UZS', 'USD'
+  const currency = 'UZS';
+  const setCurrency = () => {};
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('visitca_user');
     return savedUser ? JSON.parse(savedUser) : null;

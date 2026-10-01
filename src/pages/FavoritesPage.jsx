@@ -27,7 +27,6 @@ const INITIAL_FAVORITES = [
 ];
 
 export default function FavoritesPage() {
-  const { currency } = useAppContext();
   const [favorites, setFavorites] = useState(INITIAL_FAVORITES);
   const [isLoading, setIsLoading] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -74,9 +73,7 @@ export default function FavoritesPage() {
   };
 
   const displayPrice = (priceUZS) => {
-    return currency === 'UZS' 
-      ? `${(priceUZS || 0).toLocaleString('uz-UZ')} so'm` 
-      : `$${Math.round((priceUZS || 0) / 12500)}`;
+    return `${(priceUZS || 0).toLocaleString('uz-UZ')} so'm`;
   };
 
   if (isLoading) {

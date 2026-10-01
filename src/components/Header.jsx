@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Globe, User as UserIcon, ChevronDown, LogOut, Bell, Heart, Menu, X } from 'lucide-react';
+import { User as UserIcon, ChevronDown, LogOut, Bell, Heart, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import interactionService from '../services/interactionService';
@@ -13,16 +13,14 @@ const MOCK_NOTIFICATIONS = [
 
 export default function Header({ onLoginClick }) {
   const navigate = useNavigate();
-  const { language, setLanguage, currency, setCurrency, user, setUser, t } = useAppContext();
+  const { language, setLanguage, user, setUser, t } = useAppContext();
   const [langOpen, setLangOpen] = useState(false);
-  const [currOpen, setCurrOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const notifRef = useRef(null);
   const langRef = useRef(null);
-  const currRef = useRef(null);
   const profileRef = useRef(null);
 
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
@@ -56,9 +54,8 @@ export default function Header({ onLoginClick }) {
   const unreadCount = (notifications || []).filter(n => !n.read).length;
 
   const languages = ['UZ', 'RU', 'EN'];
-  const currencies = ['UZS', 'USD'];
 
-  // Click Outside & Escape key listener for Notifications & Popovers
+  // Click Outside & Escape key listener for Popovers
   useEffect(() => {
     function handleClickOutside(event) {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
@@ -66,9 +63,6 @@ export default function Header({ onLoginClick }) {
       }
       if (langRef.current && !langRef.current.contains(event.target)) {
         setLangOpen(false);
-      }
-      if (currRef.current && !currRef.current.contains(event.target)) {
-        setCurrOpen(false);
       }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
@@ -79,7 +73,6 @@ export default function Header({ onLoginClick }) {
       if (event.key === 'Escape') {
         setNotifOpen(false);
         setLangOpen(false);
-        setCurrOpen(false);
         setProfileOpen(false);
       }
     }
@@ -101,7 +94,6 @@ export default function Header({ onLoginClick }) {
 
   const closeAllPopovers = () => {
     setLangOpen(false);
-    setCurrOpen(false);
     setProfileOpen(false);
     setNotifOpen(false);
   };
@@ -110,6 +102,7 @@ export default function Header({ onLoginClick }) {
     <header className="sticky top-0 z-40 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 relative">
         
+        {/* Left Side: Logo only */}
         <div className="flex items-center gap-3">
           {/* Mobile Menu Toggle */}
           <button onClick={() => setMobileMenuOpen(true)} className="md:hidden text-neutral-900 dark:text-white p-1 -ml-1">
@@ -123,35 +116,50 @@ export default function Header({ onLoginClick }) {
           </div>
         </div>
 
-        {/* Right side navigation */}
-        <div className="flex items-center gap-3 sm:gap-6">
+        {/* Right Side: Main elements only (Language, Favorites, Notifications, Profile/Login) */}
+        <div className="flex items-center gap-3 sm:gap-5">
           
-          <button onClick={() => { closeAllPopovers(); navigate('/seo/samarqand'); }} className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hidden md:block transition-colors">
-            {t('nav.seo')}
-          </button>
-          
-          <button onClick={() => { closeAllPopovers(); navigate('/partners'); }} className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hidden md:block transition-colors">
-            {t('nav.partners')}
-          </button>
-          
-          <button onClick={() => { closeAllPopovers(); navigate('/status'); }} className="text-sm font-semibold text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hidden lg:block transition-colors">
-            {t('nav.b2b')}
-          </button>
+          {/* Language Selector */}
+          <div className="relative hidden sm:block" ref={langRef}>
+            <button
+              onClick={() => { const state = langOpen; closeAllPopovers(); setLangOpen(!state); }}
+              className="flex items-center gap-1 text-sm font-semibold text-neutral-700 dark:text-neutral-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors px-2 py-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <span>{language}</span>
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50">
+                <div className="py-1">
+                  {languages.map((l) => (
+                    <button 
+                      key={l} 
+                      onClick={() => { setLanguage(l); setLangOpen(false); }} 
+                      className={`block w-full px-4 py-2 text-left text-sm ${
+                        l === language 
+                          ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 font-semibold' 
+                          : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-          <button onClick={() => { closeAllPopovers(); navigate('/favorites'); }} className="text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-500 transition-colors hidden sm:block">
-            <Heart className="h-5 w-5" />
-          </button>
-
-          {/* Notifications Dropdown Container with Ref & Dark Mode */}
+          {/* Notifications Bell */}
           <div className="relative" ref={notifRef}>
             <button 
               onClick={() => { const state = notifOpen; closeAllPopovers(); setNotifOpen(!state); }}
-              className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors relative mt-1 p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors relative p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
               aria-label="Notifications"
+              title="Bildirishnomalar"
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white border-2 border-white dark:border-neutral-900">
+                <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white border-2 border-white dark:border-neutral-900">
                   {unreadCount}
                 </span>
               )}
@@ -196,48 +204,19 @@ export default function Header({ onLoginClick }) {
             )}
           </div>
 
+          {/* Favorites (Heart) Icon */}
+          <button 
+            onClick={() => { closeAllPopovers(); navigate('/favorites'); }} 
+            className="text-neutral-600 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 hidden sm:block"
+            title="Sevimlilar"
+            aria-label="Favorites"
+          >
+            <Heart className="h-5 w-5" />
+          </button>
+
           <div className="hidden h-5 w-px bg-neutral-200 dark:bg-neutral-700 sm:block"></div>
 
-          {/* Language Selector */}
-          <div className="relative hidden sm:block" ref={langRef}>
-            <button
-              onClick={() => { const state = langOpen; closeAllPopovers(); setLangOpen(!state); }}
-              className="flex items-center gap-1 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-            >
-              <span>{language}</span>
-              <ChevronDown className="h-3 w-3" />
-            </button>
-            {langOpen && (
-              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50">
-                <div className="py-1">
-                  {languages.map((l) => (
-                    <button key={l} onClick={() => { setLanguage(l); setLangOpen(false); }} className={`block w-full px-4 py-2 text-left text-sm ${l === language ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}>{l}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Currency Selector */}
-          <div className="relative hidden sm:block" ref={currRef}>
-            <button
-              onClick={() => { const state = currOpen; closeAllPopovers(); setCurrOpen(!state); }}
-              className="flex items-center gap-1 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-            >
-              <span>{currency}</span>
-              <ChevronDown className="h-3 w-3" />
-            </button>
-            {currOpen && (
-              <div className="absolute right-0 mt-2 w-24 origin-top-right rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50">
-                <div className="py-1">
-                  {currencies.map((c) => (
-                    <button key={c} onClick={() => { setCurrency(c); setCurrOpen(false); }} className={`block w-full px-4 py-2 text-left text-sm ${c === currency ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}>{c}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
+          {/* Profile / Login Button */}
           {user ? (
             <div className="relative flex items-center" ref={profileRef}>
               <button
@@ -245,7 +224,7 @@ export default function Header({ onLoginClick }) {
                 className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-2 sm:pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
                 aria-label="User menu"
               >
-                <img src={user.avatar} alt="User avatar" className="h-7 w-7 rounded-full object-cover" />
+                <img src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"} alt="User avatar" className="h-7 w-7 rounded-full object-cover" />
                 <span className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden md:block">{user.name || user.email || 'Foydalanuvchi'}</span>
                 <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400 dark:text-neutral-500" />
               </button>
@@ -279,7 +258,7 @@ export default function Header({ onLoginClick }) {
           ) : (
             <button
               onClick={onLoginClick}
-              className="flex items-center gap-1.5 rounded-lg sm:rounded-full bg-emerald-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg sm:rounded-full bg-emerald-600 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
               <UserIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>{t('nav.login')}</span>
@@ -312,29 +291,10 @@ export default function Header({ onLoginClick }) {
               </div>
             </div>
 
-            <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex gap-4">
-              <div className="flex-1">
-                <label className="text-xs font-bold text-neutral-500 uppercase mb-2 block">{t('nav.currency')}</label>
-                <div className="flex flex-wrap gap-2">
-                  {currencies.map(c => (
-                    <button key={c} onClick={() => setCurrency(c)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${c === currency ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'}`}>{c}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             <div className="p-2 space-y-1 mt-2">
-              <button onClick={() => { setMobileMenuOpen(false); navigate('/seo/samarqand'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('nav.seo')}
-              </button>
-              <button onClick={() => { setMobileMenuOpen(false); navigate('/partners'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('nav.partners')}
-              </button>
-              <button onClick={() => { setMobileMenuOpen(false); navigate('/status'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('nav.b2b')}
-              </button>
-              <button onClick={() => { setMobileMenuOpen(false); navigate('/favorites'); }} className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
-                {t('nav.favorites')}
+              <button onClick={() => { setMobileMenuOpen(false); navigate('/favorites'); }} className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
+                <Heart className="h-4 w-4 text-red-500" />
+                <span>{t('nav.favorites')}</span>
               </button>
             </div>
           </div>

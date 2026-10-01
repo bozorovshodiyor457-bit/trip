@@ -81,7 +81,7 @@ const MOCK_TOURS = [
 ];
 
 export default function SearchPage() {
-  const { currency, language } = useAppContext();
+  const { language } = useAppContext();
   const t = useTranslation(language);
   const [showMap, setShowMap] = useState(false);
   const [hoveredTourId, setHoveredTourId] = useState(null);
@@ -175,9 +175,7 @@ export default function SearchPage() {
   }, [apiTours, filters, sortBy]);
 
   const displayPrice = (priceUZS) => {
-    return currency === 'UZS' 
-      ? `${priceUZS.toLocaleString('uz-UZ')} so'm` 
-      : `$${Math.round(priceUZS / 12500)}`;
+    return `${(priceUZS || 0).toLocaleString('uz-UZ')} so'm`;
   };
 
   return (

@@ -4,7 +4,7 @@ import { useAppContext } from '../context/AppProvider';
 import { useTranslation } from '../utils/i18n';
 
 export default function TourCard({ tour = {} }) {
-  const { currency, language, favorites, toggleFavorite } = useAppContext();
+  const { language, favorites, toggleFavorite } = useAppContext();
   const t = useTranslation(language);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -14,11 +14,9 @@ export default function TourCard({ tour = {} }) {
   // Extract city name (e.g., "Samarqand" from "Samarqand, O'zbekiston")
   const cityName = tour.city || (tour.location ? tour.location.split(',')[0] : "O'zbekiston");
 
-  // Format price
+  // Format price strictly in UZS (so'm)
   const priceVal = tour.priceUZS || tour.price || 450000;
-  const formattedPrice = currency === 'UZS' 
-    ? `${Number(priceVal).toLocaleString('uz-UZ')} UZS` 
-    : `$${Math.round(Number(priceVal) / 12500)}`;
+  const formattedPrice = `${Number(priceVal).toLocaleString('uz-UZ')} so'm`;
 
   // Format duration representation
   const durationText = tour.durationDetails || tour.duration || tour.durationStr || "2 kun / 1 kecha";
