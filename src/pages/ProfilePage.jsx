@@ -5,42 +5,6 @@ import uploadService from '../services/uploadService';
 import authService, { getCompanions } from '../services/authService';
 import interactionService from '../services/interactionService';
 
-function compressImageToThumbnail(file, maxWidth = 250, maxHeight = 250) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-
-        canvas.width = Math.max(1, Math.floor(width));
-        canvas.height = Math.max(1, Math.floor(height));
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = () => resolve(event.target.result);
-    };
-    reader.onerror = () => resolve(null);
-  });
-}
-
 export default function ProfilePage() {
   const { user, setUser } = useAppContext();
   const [companions, setCompanions] = useState([]);
@@ -115,36 +79,36 @@ export default function ProfilePage() {
 
     try {
       console.log("API Request: POST /api/uploads/avatar (FormData)", file.name);
-      let newAvatarUrl = null;
-      let isServerSuccess = false;
+      
+      const res = await uploadService.uploadAvatar(file);
+      console.log("API Response: POST /api/uploads/avatar", res);
 
-      try {
-        const res = await uploadService.uploadAvatar(file);
-        console.log("API Response: POST /api/uploads/avatar", res);
-        newAvatarUrl = res?.url;
-        if (newAvatarUrl) isServerSuccess = true;
-      } catch (uploadErr) {
-        console.warn("Server upload warning, generating lightweight local preview URL:", uploadErr);
-      }
-
-      // If server didn't return URL, generate a compressed 250x250 Data URL thumbnail
+      const newAvatarUrl = res?.url || res?.avatarUrl || res?.data?.url || res?.data?.avatarUrl || res?.fileUrl;
+      
       if (!newAvatarUrl) {
-        newAvatarUrl = await compressImageToThumbnail(file);
+        throw new Error("Serverdan rasm URL havolasi qaytmadi");
       }
 
-      if (newAvatarUrl) {
-        const updatedUser = {
-          ...currentUser,
-          avatar: newAvatarUrl,
-          avatarUrl: newAvatarUrl
-        };
-        setUser(updatedUser);
-        try {
-          localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
-        } catch (storageErr) {
-          console.warn("LocalStorage save error:", storageErr);
+      // Update user state with real server HTTPS URL
+      const updatedUser = {
+        ...currentUser,
+        avatar: newAvatarUrl,
+        avatarUrl: newAvatarUrl
+      };
+      setUser(updatedUser);
+      localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+      setAvatarSuccess("Profil rasmi muvaffaqiyatli yangilandi");
+
+      // Refetch profile GET /api/b2c/auth/me to stay in sync
+      try {
+        const meRes = await authService.getMe();
+        if (meRes) {
+          const freshUser = meRes.user || meRes.data || meRes;
+          setUser(freshUser);
+          localStorage.setItem('visitca_user', JSON.stringify(freshUser));
         }
-        setAvatarSuccess(isServerSuccess ? "Profil rasmi muvaffaqiyatli yangilandi" : "Profil rasmi tanlandi va saqlandi");
+      } catch (meErr) {
+        console.warn("Profile refetch notice:", meErr);
       }
     } catch (err) {
       console.error("API Error: POST /api/uploads/avatar failed:", err);
