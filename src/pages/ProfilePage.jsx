@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { User as UserIcon, ShieldCheck, Mail, Phone, CreditCard, Plus, Trash2, Edit2, ShieldAlert } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User as UserIcon, ShieldCheck, Mail, Phone, CreditCard, Plus, Trash2, Edit2, ShieldAlert, Loader2, Camera } from 'lucide-react';
+import { useAppContext } from '../context/AppProvider';
+import uploadService from '../services/uploadService';
 
 const MOCK_USER = {
   name: "Toshmatov Eshmat",
   phone: "+998 90 123 45 67",
   email: "eshmat.t@gmail.com",
-  oneId: true, // OneID verification status
+  oneId: true,
 };
 
 const INITIAL_COMPANIONS = [
@@ -19,8 +21,62 @@ const INITIAL_CARDS = [
 ];
 
 export default function ProfilePage() {
+  const { user, setUser } = useAppContext();
   const [companions, setCompanions] = useState(INITIAL_COMPANIONS);
   const [cards, setCards] = useState(INITIAL_CARDS);
+
+  // Avatar Upload States
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  const [avatarSuccess, setAvatarSuccess] = useState('');
+  const fileInputRef = useRef(null);
+
+  const currentUser = user || MOCK_USER;
+  const userAvatar = currentUser.avatar || null;
+
+  const handleAvatarFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarError('');
+    setAvatarSuccess('');
+
+    // 1. Check file type
+    if (!file.type.startsWith('image/')) {
+      setAvatarError("Faqat rasm fayllari (JPG, PNG, WEBP) ruxsat etiladi");
+      return;
+    }
+
+    // 2. Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Fayl hajmi 5MB dan oshmasligi kerak");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const res = await uploadService.uploadAvatar(file);
+      const newAvatarUrl = res?.url || URL.createObjectURL(file);
+      
+      const updatedUser = {
+        ...currentUser,
+        avatar: newAvatarUrl
+      };
+      setUser(updatedUser);
+      localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+      setAvatarSuccess("Profil rasmi muvaffaqiyatli yangilandi");
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      // Fallback preview if AWS dev sandbox is off
+      const previewUrl = URL.createObjectURL(file);
+      const updatedUser = { ...currentUser, avatar: previewUrl };
+      setUser(updatedUser);
+      localStorage.setItem('visitca_user', JSON.stringify(updatedUser));
+      setAvatarError("Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -30,26 +86,69 @@ export default function ProfilePage() {
         
         {/* Left Column: Profile Info & Verification */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200 text-center">
-            <div className="relative inline-block mb-4">
-              <div className="h-24 w-24 rounded-full bg-neutral-100 flex items-center justify-center mx-auto border-4 border-white shadow-md">
-                <UserIcon className="h-10 w-10 text-neutral-400" />
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 text-center">
+            
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+              onChange={handleAvatarFileSelect}
+              className="hidden"
+            />
+
+            <div className="relative inline-block mb-4 group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              <div className="h-24 w-24 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto border-4 border-white dark:border-neutral-800 shadow-md overflow-hidden relative">
+                {userAvatar ? (
+                  <img src={userAvatar} alt={currentUser.name} className="h-full w-full object-cover" />
+                ) : (
+                  <UserIcon className="h-10 w-10 text-neutral-400" />
+                )}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <Loader2 className="h-7 w-7 text-white animate-spin" />
+                  </div>
+                )}
               </div>
-              <button className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-emerald-600 text-white flex items-center justify-center border-2 border-white hover:bg-emerald-700 transition-colors">
-                <Edit2 className="h-3.5 w-3.5" />
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                disabled={isUploadingAvatar}
+                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-emerald-600 text-white flex items-center justify-center border-2 border-white dark:border-neutral-900 hover:bg-emerald-700 transition-all shadow-md active:scale-95 disabled:opacity-50"
+                title="Rasmni yangilash"
+              >
+                {isUploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
               </button>
             </div>
-            <h2 className="text-xl font-bold text-neutral-900">{MOCK_USER.name}</h2>
-            <p className="text-sm text-neutral-500 mb-6">Sayohatchi</p>
+
+            <h2 className="text-xl font-bold text-neutral-900 dark:text-white">{currentUser.name || MOCK_USER.name}</h2>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">Sayohatchi</p>
+
+            {/* Error Banner */}
+            {avatarError && (
+              <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-950/40 p-3 border border-red-200 dark:border-red-800 text-left">
+                <p className="text-xs font-semibold text-red-600 dark:text-red-400 leading-snug">{avatarError}</p>
+              </div>
+            )}
+
+            {/* Success Banner */}
+            {avatarSuccess && (
+              <div className="mb-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-3 border border-emerald-200 dark:border-emerald-800 text-left">
+                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 leading-snug">{avatarSuccess}</p>
+              </div>
+            )}
             
-            <div className="space-y-3 text-sm text-left border-t border-neutral-100 pt-6">
+            <div className="space-y-3 text-sm text-left border-t border-neutral-100 dark:border-neutral-800 pt-6">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-500 flex items-center gap-2"><Phone className="h-4 w-4" /> Telefon</span>
-                <span className="font-semibold text-neutral-900">{MOCK_USER.phone}</span>
+                <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-2"><Phone className="h-4 w-4" /> Telefon</span>
+                <span className="font-semibold text-neutral-900 dark:text-white">{currentUser.phone || MOCK_USER.phone}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-500 flex items-center gap-2"><Mail className="h-4 w-4" /> Email</span>
-                <span className="font-semibold text-neutral-900">{MOCK_USER.email}</span>
+                <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-2"><Mail className="h-4 w-4" /> Email</span>
+                <span className="font-semibold text-neutral-900 dark:text-white">{currentUser.email || MOCK_USER.email}</span>
               </div>
             </div>
           </div>
