@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, MapPin, Clock, Globe, Check, X, ShieldCheck, Heart, Share, Calendar, Users, MessageCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { 
+  Star, MapPin, Clock, Globe, Check, X, ShieldCheck, Heart, Share, 
+  Calendar, Users, MessageCircle, ChevronDown, ChevronUp, Loader2, 
+  Plus, Minus 
+} from 'lucide-react';
 import tourService from '../services/tourService';
 import reviewService from '../services/reviewService';
 import interactionService from '../services/interactionService';
@@ -38,14 +42,15 @@ const MOCK_TOUR = {
     avatar: "https://i.pravatar.cc/150?u=alisher",
     rating: 4.9,
     reviewCount: 340
-  },
-  reviewsBreakdown: {
-    guide: 5.0,
-    program: 4.8,
-    organization: 4.9,
-    value: 4.7
   }
 };
+
+const AVAILABLE_DATES = [
+  { id: 1, range: "24 Okt - 25 Okt", status: "Mavjud (3 ta joy)" },
+  { id: 2, range: "01 Noy - 02 Noy", status: "Mavjud (8 ta joy)" },
+  { id: 3, range: "12 Noy - 14 Noy", status: "Mavjud (12 ta joy)" },
+  { id: 4, range: "20 Noy - 22 Noy", status: "Mavjud (5 ta joy)" },
+];
 
 export default function TourDetailsPage() {
   const { id } = useParams();
@@ -57,6 +62,15 @@ export default function TourDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isChatStarting, setIsChatStarting] = useState(false);
+
+  // Booking Widget States
+  const [adults, setAdults] = useState(2);
+  const [childrenCount, setChildrenCount] = useState(0);
+  const [selectedDateRange, setSelectedDateRange] = useState("24 Okt - 25 Okt");
+  
+  // Modals
+  const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -127,7 +141,28 @@ export default function TourDetailsPage() {
 
   const activeTour = tour || MOCK_TOUR;
   const tourTitle = activeTour.title || MOCK_TOUR.title;
-  const tourPrice = activeTour.priceUZS || activeTour.price || 450000;
+  const pricePerPerson = Number(activeTour.priceUZS || activeTour.price || 450000);
+
+  // Calculations
+  const totalGuests = adults + childrenCount;
+  const calculatedTotalPrice = pricePerPerson * totalGuests;
+
+  const guestsLabel = `${totalGuests} kishi (${adults} katta${childrenCount > 0 ? `, ${childrenCount} bola` : ''})`;
+
+  const handleProceedBooking = () => {
+    const bookingDetails = {
+      tourId: id || activeTour.id || 1,
+      title: tourTitle,
+      dateRange: selectedDateRange,
+      adults,
+      children: childrenCount,
+      totalGuests,
+      pricePerPerson,
+      totalPrice: calculatedTotalPrice
+    };
+    sessionStorage.setItem('currentBooking', JSON.stringify(bookingDetails));
+    navigate('/checkout');
+  };
 
   if (isLoading) {
     return (
@@ -142,14 +177,22 @@ export default function TourDetailsPage() {
       {/* Header Actions */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-neutral-900 dark:text-white leading-tight">
-          {MOCK_TOUR.title}
+          {tourTitle}
         </h1>
         <div className="flex gap-2">
           <button className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 shadow-sm transition-colors">
             <Share className="h-4 w-4" /> <span className="hidden sm:inline">Ulashish</span>
           </button>
-          <button className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 shadow-sm transition-colors">
-            <Heart className="h-4 w-4" /> <span className="hidden sm:inline">Saqlash</span>
+          <button 
+            onClick={handleToggleFav}
+            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium shadow-sm transition-colors ${
+              isFavorite 
+                ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-400' 
+                : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700'
+            }`}
+          >
+            <Heart className={`h-4 w-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} /> 
+            <span className="hidden sm:inline">{isFavorite ? 'Saqlangan' : 'Saqlash'}</span>
           </button>
         </div>
       </div>
@@ -157,110 +200,57 @@ export default function TourDetailsPage() {
       <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-8">
         <div className="flex items-center gap-1 font-medium text-neutral-900 dark:text-white">
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          {MOCK_TOUR.rating} <span className="text-neutral-500 dark:text-neutral-400 font-normal underline cursor-pointer">({MOCK_TOUR.reviewsCount} sharh)</span>
+          {activeTour.rating || 4.9} <span className="text-neutral-500 dark:text-neutral-400 font-normal underline cursor-pointer">({reviews.length || activeTour.reviewsCount || 128} sharh)</span>
         </div>
         <span>•</span>
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4 text-neutral-400" />
-          {MOCK_TOUR.meetingPoint.split(',')[0]}
+          {String(activeTour.meetingPoint || activeTour.location || "Samarqand").split(',')[0]}
         </div>
         <span>•</span>
         <div className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 font-medium text-neutral-700 dark:text-neutral-300">
-          {MOCK_TOUR.category}
+          {activeTour.category || "Madaniy tur"}
         </div>
       </div>
 
-      {/* Gallery */}
-      <div className="flex md:grid md:grid-cols-4 gap-2 mb-10 h-64 md:h-[400px] lg:h-[480px] rounded-2xl overflow-x-auto snap-x snap-mandatory no-scrollbar md:overflow-hidden">
-        <div className="flex-shrink-0 w-full sm:w-auto md:col-span-2 h-64 md:h-full relative group cursor-pointer snap-start">
-          <img src={MOCK_TOUR.images[0]} alt="Gallery 1" className="h-full w-full object-cover md:transition-transform md:duration-500 group-hover:scale-105" />
+      {/* Gallery Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-2xl overflow-hidden mb-12 h-[350px] sm:h-[450px]">
+        <div className="md:col-span-2 h-full">
+          <img src={activeTour.images?.[0] || MOCK_TOUR.images[0]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
         </div>
-        {MOCK_TOUR.images.slice(1).map((img, idx) => (
-          <div key={idx} className="flex-shrink-0 w-full md:hidden h-full relative snap-start">
-            <img src={img} alt={`Gallery mobile ${idx + 2}`} className="h-full w-full object-cover" />
-          </div>
-        ))}
-        <div className="hidden md:grid grid-rows-2 gap-2 h-full">
-          <div className="h-full relative group cursor-pointer overflow-hidden"><img src={MOCK_TOUR.images[1]} alt="Gallery 2" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
-          <div className="h-full relative group cursor-pointer overflow-hidden"><img src={MOCK_TOUR.images[2]} alt="Gallery 3" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
+        <div className="hidden md:grid grid-rows-2 gap-4 h-full">
+          <img src={activeTour.images?.[1] || MOCK_TOUR.images[1]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
+          <img src={activeTour.images?.[2] || MOCK_TOUR.images[2]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
         </div>
-        <div className="hidden md:grid grid-rows-2 gap-2 h-full">
-          <div className="h-full relative group cursor-pointer overflow-hidden"><img src={MOCK_TOUR.images[3]} alt="Gallery 4" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
-          <div className="h-full relative group cursor-pointer overflow-hidden"><img src={MOCK_TOUR.images[4]} alt="Gallery 5" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>
+        <div className="hidden md:block h-full">
+          <img src={activeTour.images?.[3] || MOCK_TOUR.images[3]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-10">
-        {/* Main Content */}
-        <div className="w-full lg:w-2/3 space-y-10">
+      {/* Details & Booking Sidebar Grid */}
+      <div className="flex flex-col lg:flex-row gap-12">
+        {/* Main Details */}
+        <div className="w-full lg:w-2/3 space-y-12">
           
-          {/* Quick Info Bar */}
-          <div className="flex flex-wrap gap-6 py-4 border-y border-neutral-200 dark:border-neutral-800">
-            <div className="flex items-center gap-3">
-              <Clock className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
-              <div>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">Davomiyligi</p>
-                <p className="font-semibold text-neutral-900 dark:text-white">{MOCK_TOUR.duration}</p>
-              </div>
-            </div>
-            <div className="w-px h-10 bg-neutral-200 dark:bg-neutral-800 hidden sm:block"></div>
-            <div className="flex items-center gap-3">
-              <Globe className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
-              <div>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">Tillar</p>
-                <p className="font-semibold text-neutral-900 dark:text-white">{MOCK_TOUR.languages.join(', ')}</p>
-              </div>
-            </div>
-            <div className="w-px h-10 bg-neutral-200 dark:bg-neutral-800 hidden sm:block"></div>
-            <div className="flex items-center gap-3">
-              <Users className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
-              <div>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">Guruh hajmi</p>
-                <p className="font-semibold text-neutral-900 dark:text-white">12 kishigacha</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Organizer Profile (C-06 snippet) */}
-          <div className="flex items-center justify-between p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-800">
-            <div className="flex items-center gap-4">
-              <img src={MOCK_TOUR.organizer.avatar} alt="Organizer" className="h-16 w-16 rounded-full object-cover" />
-              <div>
-                <h3 className="font-bold text-neutral-900 dark:text-white text-lg flex items-center gap-1">
-                  {MOCK_TOUR.organizer.name}
-                  {MOCK_TOUR.organizer.isVerified && <ShieldCheck className="h-5 w-5 text-emerald-500" title="Tasdiqlangan tashkilotchi" />}
-                </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">{MOCK_TOUR.organizer.type} • {MOCK_TOUR.organizer.experience} tajriba</p>
-              </div>
-            </div>
-            <div className="text-right hidden sm:block">
-               <div className="flex items-center justify-end gap-1 font-bold text-neutral-900 dark:text-white">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  {MOCK_TOUR.organizer.rating}
-               </div>
-               <p className="text-xs text-neutral-500 dark:text-neutral-400">{MOCK_TOUR.organizer.reviewCount} sharh</p>
-            </div>
-          </div>
-
-          {/* Program Accordion */}
+          {/* Program Section */}
           <div>
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Tur dasturi</h2>
+            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Sayohat dasturi</h2>
             <div className="space-y-4">
-              {MOCK_TOUR.program.map((day, idx) => (
-                <div key={idx} className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-                  <button 
-                    onClick={() => setOpenDay(openDay === idx ? -1 : idx)}
-                    className="w-full flex items-center justify-between p-5 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left"
+              {(activeTour.program || MOCK_TOUR.program).map((item, index) => (
+                <div key={index} className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white dark:bg-neutral-800/50">
+                  <button
+                    onClick={() => setOpenDay(openDay === index ? -1 : index)}
+                    className="w-full flex items-center justify-between p-4 text-left font-semibold text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
                   >
-                    <div>
-                      <span className="font-semibold text-neutral-900 dark:text-white mr-3">{day.day}</span>
-                      <span className="text-neutral-700 dark:text-neutral-300">{day.title}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold">{item.day}</span>
+                      <span>{item.title}</span>
                     </div>
-                    {openDay === idx ? <ChevronUp className="h-5 w-5 text-neutral-400" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
+                    {openDay === index ? <ChevronUp className="h-5 w-5 text-neutral-400" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
                   </button>
-                  {openDay === idx && (
-                    <div className="p-5 pt-0 text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800 leading-relaxed">
-                      {day.desc}
+                  {openDay === index && (
+                    <div className="p-4 pt-0 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60 mt-2">
+                      {item.desc}
                     </div>
                   )}
                 </div>
@@ -269,32 +259,35 @@ export default function TourDetailsPage() {
           </div>
 
           {/* Inclusions & Exclusions */}
-          <div>
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Nimalar kiritilgan?</h2>
-            <div className="grid sm:grid-cols-2 gap-6">
-              <ul className="space-y-3">
-                {MOCK_TOUR.inclusions.map((inc, i) => (
-                  <li key={i} className="flex items-start gap-3 text-neutral-700 dark:text-neutral-300">
-                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    {inc}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-neutral-200 dark:border-neutral-800">
+            <div>
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Narxga kiritilgan</h3>
+              <ul className="space-y-2.5">
+                {(activeTour.inclusions || MOCK_TOUR.inclusions).map((inc, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-neutral-300">
+                    <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{inc}</span>
                   </li>
                 ))}
               </ul>
-              <ul className="space-y-3">
-                {MOCK_TOUR.exclusions.map((exc, i) => (
-                  <li key={i} className="flex items-start gap-3 text-neutral-500 dark:text-neutral-400">
-                    <X className="h-5 w-5 text-neutral-400 flex-shrink-0 mt-0.5" />
-                    {exc}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Narxga kiritilmagan</h3>
+              <ul className="space-y-2.5">
+                {(activeTour.exclusions || MOCK_TOUR.exclusions).map((exc, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-neutral-300">
+                    <X className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+                    <span>{exc}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          {/* Map Mockup */}
+          {/* Map Location */}
           <div>
             <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Uchrashuv nuqtasi</h2>
-            <p className="text-neutral-700 dark:text-neutral-300 mb-4">{MOCK_TOUR.meetingPoint}</p>
+            <p className="text-neutral-700 dark:text-neutral-300 mb-4">{activeTour.meetingPoint || MOCK_TOUR.meetingPoint}</p>
             <div className="w-full h-64 bg-neutral-200 dark:bg-neutral-800 rounded-xl overflow-hidden relative">
               <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/6/41/24.png')] bg-cover bg-center opacity-50 mix-blend-multiply dark:mix-blend-screen dark:opacity-30"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -309,9 +302,14 @@ export default function TourDetailsPage() {
         <div className="w-full lg:w-1/3">
           <div className="sticky top-24 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-6">
             
-            <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-3xl font-bold text-neutral-900 dark:text-white">{MOCK_TOUR.priceUZS.toLocaleString('uz-UZ')}</span>
-              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">so'm / kishi</span>
+            <div className="flex items-baseline justify-between mb-6">
+              <div>
+                <span className="text-3xl font-bold text-neutral-900 dark:text-white">{calculatedTotalPrice.toLocaleString('uz-UZ')}</span>
+                <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block sm:inline sm:ml-1">so'm (jami)</span>
+              </div>
+              <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                {pricePerPerson.toLocaleString('uz-UZ')} so'm / kishi
+              </span>
             </div>
 
             <div className="flex rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1 mb-6">
@@ -329,37 +327,51 @@ export default function TourDetailsPage() {
               </button>
             </div>
 
-            <div className="space-y-4 mb-6">
-              <div className="border border-neutral-300 dark:border-neutral-700 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 bg-white dark:bg-neutral-800">
+            <div className="space-y-4 mb-6 relative">
+              {/* Date selector trigger */}
+              <div 
+                onClick={() => setIsDateModalOpen(true)}
+                className="border border-neutral-300 dark:border-neutral-700 rounded-xl p-3 flex justify-between items-center cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 bg-white dark:bg-neutral-800 transition-colors"
+              >
                 <div>
                   <p className="text-xs font-bold text-neutral-900 dark:text-white uppercase">Sana</p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-0.5">24 Okt - 25 Okt</p>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">{selectedDateRange}</p>
                 </div>
-                <Calendar className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                <Calendar className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="border border-neutral-300 dark:border-neutral-700 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 bg-white dark:bg-neutral-800">
+
+              {/* Guests selector trigger */}
+              <div 
+                onClick={() => setIsGuestsModalOpen(true)}
+                className="border border-neutral-300 dark:border-neutral-700 rounded-xl p-3 flex justify-between items-center cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 bg-white dark:bg-neutral-800 transition-colors"
+              >
                 <div>
                   <p className="text-xs font-bold text-neutral-900 dark:text-white uppercase">Mehmonlar</p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-0.5">2 kishi</p>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">{guestsLabel}</p>
                 </div>
-                <Users className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
 
             <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400 border border-transparent dark:border-emerald-900/50 text-sm font-medium px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5" />
-              Safar kafolatlangan! Faqat 3 ta joy qoldi.
+              <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
+              <span>Safar kafolatlangan! Faqat 3 ta joy qoldi.</span>
             </div>
 
             <button 
-              onClick={() => navigate('/checkout')}
-              className="hidden sm:block w-full bg-emerald-600 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md mb-3"
+              onClick={handleProceedBooking}
+              className="w-full bg-emerald-600 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/25 mb-3"
             >
-              Bron qilish
+              Bron qilish ({calculatedTotalPrice.toLocaleString('uz-UZ')} so'm)
             </button>
             
-            <button className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white font-bold text-sm py-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors flex justify-center items-center gap-2">
-              <MessageCircle className="h-5 w-5" /> Savol berish
+            <button 
+              onClick={handleAskQuestion}
+              disabled={isChatStarting}
+              className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white font-bold text-sm py-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
+            >
+              {isChatStarting ? <Loader2 className="h-5 w-5 animate-spin text-emerald-600" /> : <MessageCircle className="h-5 w-5" />} 
+              Savol berish
             </button>
 
             <p className="text-center text-xs text-neutral-400 dark:text-neutral-500 mt-4">Sizdan hozir pul yechilmaydi</p>
@@ -367,15 +379,138 @@ export default function TourDetailsPage() {
         </div>
       </div>
 
-      {/* Mobile Sticky CTA */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center">
+      {/* Date Picker Modal */}
+      {isDateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-2xl max-w-md w-full border border-neutral-200 dark:border-neutral-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-emerald-600" /> Bo'sh sanalarni tanlang
+              </h3>
+              <button onClick={() => setIsDateModalOpen(false)} className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              {AVAILABLE_DATES.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    setSelectedDateRange(item.range);
+                    setIsDateModalOpen(false);
+                  }}
+                  className={`p-3.5 rounded-xl border flex justify-between items-center cursor-pointer transition-all ${
+                    selectedDateRange === item.range 
+                      ? 'border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold' 
+                      : 'border-neutral-200 dark:border-neutral-800 hover:border-emerald-500 dark:hover:border-emerald-500 text-neutral-700 dark:text-neutral-300'
+                  }`}
+                >
+                  <span className="text-sm">{item.range}</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setIsDateModalOpen(false)}
+              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
+            >
+              Tayyor
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Guests Picker Modal */}
+      {isGuestsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-2xl max-w-md w-full border border-neutral-200 dark:border-neutral-800">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                <Users className="h-5 w-5 text-emerald-600" /> Mehmonlar sonini tanlang
+              </h3>
+              <button onClick={() => setIsGuestsModalOpen(false)} className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 mb-6">
+              {/* Adults Counter */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50">
+                <div>
+                  <p className="font-bold text-sm text-neutral-900 dark:text-white">Kattalar</p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">12 yoshdan yuqori</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setAdults(prev => Math.max(1, prev - 1))}
+                    disabled={adults <= 1}
+                    className="h-8 w-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-40 transition-colors"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="font-bold text-neutral-900 dark:text-white text-base w-4 text-center">{adults}</span>
+                  <button
+                    onClick={() => setAdults(prev => prev + 1)}
+                    className="h-8 w-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Children Counter */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50">
+                <div>
+                  <p className="font-bold text-sm text-neutral-900 dark:text-white">Bolalar</p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">2-11 yoshgacha</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setChildrenCount(prev => Math.max(0, prev - 1))}
+                    disabled={childrenCount <= 0}
+                    className="h-8 w-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-40 transition-colors"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="font-bold text-neutral-900 dark:text-white text-base w-4 text-center">{childrenCount}</span>
+                  <button
+                    onClick={() => setChildrenCount(prev => prev + 1)}
+                    className="h-8 w-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 mb-6 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl flex justify-between items-center text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+              <span>Hisoblangan summa:</span>
+              <span className="text-sm font-extrabold">{calculatedTotalPrice.toLocaleString('uz-UZ')} so'm</span>
+            </div>
+
+            <button
+              onClick={() => setIsGuestsModalOpen(false)}
+              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
+            >
+              Tayyor
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky CTA Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl flex justify-between items-center gap-4">
         <div>
-          <span className="text-xl font-bold text-neutral-900 dark:text-white">{MOCK_TOUR.priceUZS.toLocaleString('uz-UZ')}</span>
-          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block">so'm / kishi</span>
+          <span className="text-xl font-black text-neutral-900 dark:text-white">{calculatedTotalPrice.toLocaleString('uz-UZ')}</span>
+          <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block">{guestsLabel}</span>
         </div>
         <button 
-          onClick={() => navigate('/checkout')}
-          className="bg-emerald-600 text-white font-bold text-base py-3 px-6 rounded-xl hover:bg-emerald-700 transition-colors shadow-md"
+          onClick={handleProceedBooking}
+          className="flex-1 bg-emerald-600 text-white font-bold text-base py-3.5 px-6 rounded-xl hover:bg-emerald-700 transition-all shadow-md text-center"
         >
           Bron qilish
         </button>
@@ -383,4 +518,3 @@ export default function TourDetailsPage() {
     </div>
   );
 }
-
