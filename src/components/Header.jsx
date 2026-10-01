@@ -211,14 +211,15 @@ export default function Header({ onLoginClick }) {
           </div>
 
           {user ? (
-            <div className="relative hidden sm:block" ref={profileRef}>
+            <div className="relative flex items-center" ref={profileRef}>
               <button
                 onClick={() => { const state = profileOpen; closeAllPopovers(); setProfileOpen(!state); }}
-                className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-neutral-200 dark:border-neutral-700 p-1 pr-2 sm:pr-3 hover:shadow-md dark:hover:border-neutral-600 transition-all"
+                aria-label="User menu"
               >
                 <img src={user.avatar} alt="User avatar" className="h-7 w-7 rounded-full object-cover" />
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden lg:block">{user.name || user.email || 'Foydalanuvchi'}</span>
-                <ChevronDown className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
+                <span className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-200 hidden md:block">{user.name || user.email || 'Foydalanuvchi'}</span>
+                <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400 dark:text-neutral-500" />
               </button>
               
               {profileOpen && (
@@ -253,10 +254,10 @@ export default function Header({ onLoginClick }) {
           ) : (
             <button
               onClick={onLoginClick}
-              className="hidden sm:flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg sm:rounded-full bg-emerald-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
-              <UserIcon className="h-4 w-4" />
-              {t('nav.login')}
+              <UserIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>{t('nav.login')}</span>
             </button>
           )}
 

@@ -2,6 +2,7 @@ export const translations = {
   uz: {
     nav: {
       home: 'Bosh sahifa',
+      search: 'Qidiruv',
       tours: 'Turlar',
       partners: 'Hamkorlarga',
       seo: 'SEO Sahifa',
@@ -19,6 +20,15 @@ export const translations = {
       favorites: 'Sevimlilar',
       b2b: 'B2B / Statuslar'
     },
+    categoriesTitle: "Ommabop yo'nalishlar",
+    catMountain: "Tog' sayohatlari",
+    catMountainDesc: "Chotqol va Zomin tog'lari",
+    catHistorical: "Tarixiy shaharlar",
+    catHistoricalDesc: "Samarqand, Buxoro, Xiva obidalari",
+    catGastronomic: "Gastronomik",
+    catGastronomicDesc: "Milliy taomlar va osh festivallari",
+    catExtreme: "Ekstremal",
+    catExtremeDesc: "Kvadrotsikl, parashyut va kemping",
     auth: {
       loginTitle: 'Tizimga kirish',
       signup: 'Ro\'yxatdan o\'tish',
@@ -225,6 +235,7 @@ export const translations = {
   ru: {
     nav: {
       home: 'Главная',
+      search: 'Поиск',
       tours: 'Туры',
       partners: 'Партнерам',
       seo: 'SEO Страница',
@@ -242,6 +253,15 @@ export const translations = {
       favorites: 'Избранное',
       b2b: 'B2B / Статусы'
     },
+    categoriesTitle: "Популярные направления",
+    catMountain: "Горные туры",
+    catMountainDesc: "Горы Чаткала и Заамина",
+    catHistorical: "Исторические города",
+    catHistoricalDesc: "Памятники Самарканда, Бухары и Хивы",
+    catGastronomic: "Гастрономический",
+    catGastronomicDesc: "Национальные блюда и фестивали плова",
+    catExtreme: "Экстремальный",
+    catExtremeDesc: "Квадроциклы, парашют и кемпинг",
     auth: {
       loginTitle: 'Вход в систему',
       signup: 'Регистрация',
@@ -448,6 +468,7 @@ export const translations = {
   en: {
     nav: {
       home: 'Home',
+      search: 'Search',
       tours: 'Tours',
       partners: 'Partners',
       seo: 'SEO Page',
@@ -465,6 +486,15 @@ export const translations = {
       favorites: 'Favorites',
       b2b: 'B2B / Statuses'
     },
+    categoriesTitle: "Popular Destinations",
+    catMountain: "Mountain Tours",
+    catMountainDesc: "Chatkal & Zaamin Mountains",
+    catHistorical: "Historical Cities",
+    catHistoricalDesc: "Monuments of Samarkand, Bukhara & Khiva",
+    catGastronomic: "Gastronomic",
+    catGastronomicDesc: "National cuisine & pilaf festivals",
+    catExtreme: "Extreme",
+    catExtremeDesc: "ATVs, skydiving & camping",
     auth: {
       loginTitle: 'Login',
       signup: 'Sign Up',

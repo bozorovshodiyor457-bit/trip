@@ -51,17 +51,47 @@ export const AppProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const t = (path) => {
+  const t = (path, fallback) => {
+    if (!path) return fallback || '';
+    const lang = (language || 'uz').toLowerCase();
+    const currentDict = translations[lang] || translations['uz'];
+    const uzDict = translations['uz'];
+
+    // 1. Try dot notation lookup in current language dict
     const keys = path.split('.');
-    let result = translations[language?.toLowerCase()] || translations['uz'];
+    let result = currentDict;
+    let found = true;
     for (const key of keys) {
       if (result && result[key] !== undefined) {
         result = result[key];
       } else {
-        return path; // Fallback to key
+        found = false;
+        break;
       }
     }
-    return result;
+    if (found && typeof result === 'string') return result;
+
+    // 2. Try looking in home or nav sub-objects if flat key passed
+    if (currentDict.home && currentDict.home[path] !== undefined) return currentDict.home[path];
+    if (currentDict.nav && currentDict.nav[path] !== undefined) return currentDict.nav[path];
+
+    // 3. Fallback to Uzbek language dict if current lang missed it
+    let uzResult = uzDict;
+    let uzFound = true;
+    for (const key of keys) {
+      if (uzResult && uzResult[key] !== undefined) {
+        uzResult = uzResult[key];
+      } else {
+        uzFound = false;
+        break;
+      }
+    }
+    if (uzFound && typeof uzResult === 'string') return uzResult;
+    if (uzDict.home && uzDict.home[path] !== undefined) return uzDict.home[path];
+    if (uzDict.nav && uzDict.nav[path] !== undefined) return uzDict.nav[path];
+
+    // 4. Return explicit fallback parameter if provided, otherwise path
+    return fallback || path;
   };
 
   const value = {
