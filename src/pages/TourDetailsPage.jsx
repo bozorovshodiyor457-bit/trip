@@ -276,6 +276,8 @@ export default function TourDetailsPage() {
             <p className="text-center text-xs text-neutral-400 dark:text-neutral-500 mt-4">Sizdan hozir pul yechilmaydi</p>
           </div>
         </div>
+      </div>
+
       {/* Mobile Sticky CTA */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center">
         <div>
@@ -292,3 +294,4 @@ export default function TourDetailsPage() {
     </div>
   );
 }
+

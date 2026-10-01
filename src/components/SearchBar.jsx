@@ -187,20 +187,21 @@ export default function SearchBar() {
           />
         </div>
 
-        {/* Who? */}
+        {/* Sayohatchilar */}
         <div 
           className={`relative flex-1 pl-6 pr-2 py-2 cursor-pointer transition-colors flex flex-row items-center justify-between ${activeInput === 'guests' ? 'bg-neutral-100 dark:bg-neutral-700 sm:rounded-r-full' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 sm:rounded-r-full'}`}
           onClick={() => setActiveInput('guests')}
         >
           <div className="py-2 sm:py-0">
-            <label className="block text-[11px] font-bold text-neutral-900 dark:text-white cursor-pointer">Kimlar?</label>
+            <label className="block text-[11px] font-bold text-neutral-900 dark:text-white cursor-pointer">Sayohatchilar</label>
             <span className="block text-sm text-neutral-600 dark:text-neutral-300 truncate">
-              {adults + children > 0 ? `${adults + children} mehmon` : 'Mehmonlar soni'}
+              {adults + children > 0 ? `${adults + children} sayohatchi` : 'Sayohatchilar soni'}
             </span>
           </div>
 
-          <button className="ml-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md hover:bg-emerald-700 transition-colors flex-shrink-0" onClick={(e) => { e.stopPropagation(); /* Perform search */ }}>
-             <Search className="h-5 w-5" />
+          <button className="ml-2 flex h-12 items-center gap-2 rounded-full bg-emerald-600 px-5 text-white font-bold text-sm shadow-md hover:bg-emerald-700 transition-colors flex-shrink-0" onClick={(e) => { e.stopPropagation(); /* Perform search */ }}>
+             <Search className="h-4 w-4" />
+             <span className="hidden lg:inline">Qidirish</span>
           </button>
 
           {activeInput === 'guests' && (
