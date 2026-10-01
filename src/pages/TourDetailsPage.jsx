@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  Star, MapPin, Clock, Globe, Check, X, ShieldCheck, Heart, Share, 
-  Calendar, Users, MessageCircle, ChevronDown, ChevronUp, Loader2, 
-  Plus, Minus 
+  Star, MapPin, Clock, Check, X, ShieldCheck, Heart, Share, 
+  Calendar, Users, ChevronDown, ChevronUp, Loader2, 
+  Plus, Minus, ArrowLeft
 } from 'lucide-react';
 import tourService from '../services/tourService';
 import reviewService from '../services/reviewService';
@@ -19,12 +19,14 @@ export default function TourDetailsPage() {
   const [availableDates, setAvailableDates] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isChatStarting, setIsChatStarting] = useState(false);
 
   // Booking Widget States
   const [adults, setAdults] = useState(2);
   const [childrenCount, setChildrenCount] = useState(0);
-  const [selectedDateRange, setSelectedDateRange] = useState("Tanlanmagan");
+  const [selectedDateRange, setSelectedDateRange] = useState("Sanani tanlang");
   
   // Modals
   const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
@@ -35,40 +37,47 @@ export default function TourDetailsPage() {
     async function loadTourData() {
       if (!id) {
         setIsLoading(false);
+        setError("Tur kodi ko'rsatilmagan");
         return;
       }
       try {
         setIsLoading(true);
+        setError(null);
         console.log(`API Request: GET /api/b2c/tours/${id}`);
         const data = await tourService.getTourById(id);
         console.log(`API Response: GET /api/b2c/tours/${id}`, data);
 
-        if (isMounted && data) {
-          const detail = data?.tour || data?.data || data;
-          setTour(detail);
+        if (isMounted) {
+          const detail = data?.tour || data?.data?.tour || data?.data || (typeof data === 'object' ? data : null);
+          if (!detail) {
+            setError("Tur topilmadi");
+            setTour(null);
+          } else {
+            setTour(detail);
 
-          // If optionId exists, fetch real departure slots
-          const optionId = detail?.options?.[0]?._id || detail?.optionId || detail?.id;
-          if (optionId) {
-            try {
-              console.log(`API Request: GET /api/b2c/tours/options/${optionId}/departures`);
-              const depRes = await tourService.getOptionDepartures(optionId);
-              console.log(`API Response: GET /api/b2c/tours/options/${optionId}/departures`, depRes);
-              
-              const slots = depRes?.departures || depRes?.data || (Array.isArray(depRes) ? depRes : []);
-              if (slots.length > 0) {
-                setAvailableDates(slots);
-                const firstSlot = slots[0]?.date || slots[0]?.range || slots[0]?.startDate;
-                if (firstSlot) setSelectedDateRange(firstSlot);
+            // If options/departures exist, fetch them
+            const optionId = detail?.options?.[0]?._id || detail?.optionId || detail?.id || id;
+            if (optionId) {
+              try {
+                const depRes = await tourService.getOptionDepartures(optionId);
+                const slots = depRes?.departures || depRes?.data || (Array.isArray(depRes) ? depRes : []);
+                if (slots.length > 0) {
+                  setAvailableDates(slots);
+                  const firstSlot = slots[0]?.date || slots[0]?.range || slots[0]?.startDate;
+                  if (firstSlot) setSelectedDateRange(firstSlot);
+                }
+              } catch (depErr) {
+                console.warn("Departures API notice:", depErr);
               }
-            } catch (depErr) {
-              console.warn("Departures API notice:", depErr);
             }
           }
         }
       } catch (err) {
         console.error(`API Error: GET /api/b2c/tours/${id} failed:`, err);
-        if (isMounted) setTour(null);
+        if (isMounted) {
+          setError("Tur ma'lumotlarini yuklab bo'lmadi");
+          setTour(null);
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -96,13 +105,13 @@ export default function TourDetailsPage() {
   };
 
   const handleAskQuestion = async () => {
+    if (!tour) return;
     setIsChatStarting(true);
     try {
-      const currentTour = tour || MOCK_TOUR;
       const res = await chatService.startChat({
-        tourId: id || currentTour.id,
-        organizerId: currentTour.organizer?._id || currentTour.organizer?.id,
-        initialMessage: `Salom! "${currentTour.title}" turi bo'yicha savolim bor edi.`
+        tourId: id || tour._id || tour.id,
+        organizerId: tour.organizer?._id || tour.organizer?.id,
+        initialMessage: `Salom! "${tour.title || tour.name}" turi bo'yicha savolim bor edi.`
       });
       const chatId = res?.chat?._id || res?._id || res?.id;
       if (chatId) {
@@ -118,19 +127,53 @@ export default function TourDetailsPage() {
     }
   };
 
-  const activeTour = tour || MOCK_TOUR;
-  const tourTitle = activeTour.title || MOCK_TOUR.title;
-  const pricePerPerson = Number(activeTour.priceUZS || activeTour.price || 450000);
+  if (isLoading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[450px]">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400 mb-3" />
+        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Tur ma'lumotlari yuklanmoqda...</p>
+      </div>
+    );
+  }
+
+  if (error || !tour) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <div className="flex flex-col items-center justify-center p-8 bg-neutral-50 dark:bg-neutral-800/50 rounded-3xl border border-neutral-200 dark:border-neutral-800">
+          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
+            Tur topilmadi yoki o'chirilgan
+          </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 max-w-md">
+            {error || "Siz qidirgan tur mavjud emas yoki tizimdan olib tashlangan."}
+          </p>
+          <button
+            onClick={() => navigate('/search')}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-md"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Turlarga qaytish</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const tourTitle = tour.title || tour.name || "Sayohat turi";
+  const pricePerPerson = Number(tour.priceUZS || tour.price || tour.price_from || 0);
 
   // Calculations
   const totalGuests = adults + childrenCount;
   const calculatedTotalPrice = pricePerPerson * totalGuests;
-
   const guestsLabel = `${totalGuests} kishi (${adults} katta${childrenCount > 0 ? `, ${childrenCount} bola` : ''})`;
+
+  // Extract gallery images safely
+  const tourImages = Array.isArray(tour.images) && tour.images.length > 0 
+    ? tour.images 
+    : [tour.image || tour.cover_image || tour.image_url || "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=1200&q=80"];
 
   const handleProceedBooking = () => {
     const bookingDetails = {
-      tourId: id || activeTour.id || 1,
+      tourId: id || tour._id || tour.id || 1,
       title: tourTitle,
       dateRange: selectedDateRange,
       adults,
@@ -143,16 +186,14 @@ export default function TourDetailsPage() {
     navigate('/checkout');
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400" />
-      </div>
-    );
-  }
+  const programList = Array.isArray(tour.program) ? tour.program : [];
+  const inclusionsList = Array.isArray(tour.inclusions) ? tour.inclusions : [];
+  const exclusionsList = Array.isArray(tour.exclusions) ? tour.exclusions : [];
+  const meetingPointStr = tour.meetingPoint || tour.location || tour.city || "Ko'rsatilmagan";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 pb-32 sm:pb-8">
+      
       {/* Header Actions */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-neutral-900 dark:text-white leading-tight">
@@ -179,30 +220,30 @@ export default function TourDetailsPage() {
       <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-8">
         <div className="flex items-center gap-1 font-medium text-neutral-900 dark:text-white">
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          {activeTour.rating || 4.9} <span className="text-neutral-500 dark:text-neutral-400 font-normal underline cursor-pointer">({reviews.length || activeTour.reviewsCount || 128} sharh)</span>
+          {tour.rating || tour.rating_avg || 4.9} <span className="text-neutral-500 dark:text-neutral-400 font-normal underline cursor-pointer">({reviews.length || tour.reviewsCount || 0} sharh)</span>
         </div>
         <span>•</span>
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4 text-neutral-400" />
-          {String(activeTour.meetingPoint || activeTour.location || "Samarqand").split(',')[0]}
+          {String(meetingPointStr).split(',')[0]}
         </div>
         <span>•</span>
         <div className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 font-medium text-neutral-700 dark:text-neutral-300">
-          {activeTour.category || "Madaniy tur"}
+          {tour.category || "Madaniy tur"}
         </div>
       </div>
 
       {/* Gallery Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-2xl overflow-hidden mb-12 h-[350px] sm:h-[450px]">
         <div className="md:col-span-2 h-full">
-          <img src={activeTour.images?.[0] || MOCK_TOUR.images[0]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
+          <img src={tourImages[0]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
         </div>
         <div className="hidden md:grid grid-rows-2 gap-4 h-full">
-          <img src={activeTour.images?.[1] || MOCK_TOUR.images[1]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
-          <img src={activeTour.images?.[2] || MOCK_TOUR.images[2]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
+          <img src={tourImages[1] || tourImages[0]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
+          <img src={tourImages[2] || tourImages[0]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
         </div>
         <div className="hidden md:block h-full">
-          <img src={activeTour.images?.[3] || MOCK_TOUR.images[3]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
+          <img src={tourImages[3] || tourImages[0]} alt={tourTitle} className="w-full h-full object-cover hover:opacity-95 transition-opacity cursor-pointer" />
         </div>
       </div>
 
@@ -211,62 +252,80 @@ export default function TourDetailsPage() {
         {/* Main Details */}
         <div className="w-full lg:w-2/3 space-y-12">
           
-          {/* Program Section */}
-          <div>
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Sayohat dasturi</h2>
-            <div className="space-y-4">
-              {(activeTour.program || MOCK_TOUR.program).map((item, index) => (
-                <div key={index} className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white dark:bg-neutral-800/50">
-                  <button
-                    onClick={() => setOpenDay(openDay === index ? -1 : index)}
-                    className="w-full flex items-center justify-between p-4 text-left font-semibold text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold">{item.day}</span>
-                      <span>{item.title}</span>
-                    </div>
-                    {openDay === index ? <ChevronUp className="h-5 w-5 text-neutral-400" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
-                  </button>
-                  {openDay === index && (
-                    <div className="p-4 pt-0 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60 mt-2">
-                      {item.desc}
-                    </div>
-                  )}
-                </div>
-              ))}
+          {/* Tour Description */}
+          {tour.description && (
+            <div>
+              <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">Sayohat haqida</h2>
+              <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed text-base whitespace-pre-line">
+                {tour.description}
+              </p>
             </div>
-          </div>
+          )}
+
+          {/* Program Section */}
+          {programList.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Sayohat dasturi</h2>
+              <div className="space-y-4">
+                {programList.map((item, index) => (
+                  <div key={index} className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <button
+                      onClick={() => setOpenDay(openDay === index ? -1 : index)}
+                      className="w-full flex items-center justify-between p-4 text-left font-semibold text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold">{item.day || `Kun ${index + 1}`}</span>
+                        <span>{item.title}</span>
+                      </div>
+                      {openDay === index ? <ChevronUp className="h-5 w-5 text-neutral-400" /> : <ChevronDown className="h-5 w-5 text-neutral-400" />}
+                    </button>
+                    {openDay === index && (
+                      <div className="p-4 pt-0 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60 mt-2">
+                        {item.desc || item.description}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Inclusions & Exclusions */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-neutral-200 dark:border-neutral-800">
-            <div>
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Narxga kiritilgan</h3>
-              <ul className="space-y-2.5">
-                {(activeTour.inclusions || MOCK_TOUR.inclusions).map((inc, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-neutral-300">
-                    <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>{inc}</span>
-                  </li>
-                ))}
-              </ul>
+          {(inclusionsList.length > 0 || exclusionsList.length > 0) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-neutral-200 dark:border-neutral-800">
+              {inclusionsList.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Narxga kiritilgan</h3>
+                  <ul className="space-y-2.5">
+                    {inclusionsList.map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-neutral-300">
+                        <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>{typeof inc === 'string' ? inc : inc.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {exclusionsList.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Narxga kiritilmagan</h3>
+                  <ul className="space-y-2.5">
+                    {exclusionsList.map((exc, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-neutral-300">
+                        <X className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+                        <span>{typeof exc === 'string' ? exc : exc.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Narxga kiritilmagan</h3>
-              <ul className="space-y-2.5">
-                {(activeTour.exclusions || MOCK_TOUR.exclusions).map((exc, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700 dark:text-neutral-300">
-                    <X className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
-                    <span>{exc}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          )}
 
           {/* Map Location */}
           <div>
             <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Uchrashuv nuqtasi</h2>
-            <p className="text-neutral-700 dark:text-neutral-300 mb-4">{activeTour.meetingPoint || MOCK_TOUR.meetingPoint}</p>
+            <p className="text-neutral-700 dark:text-neutral-300 mb-4">{meetingPointStr}</p>
             <div className="w-full h-64 bg-neutral-200 dark:bg-neutral-800 rounded-xl overflow-hidden relative">
               <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/6/41/24.png')] bg-cover bg-center opacity-50 mix-blend-multiply dark:mix-blend-screen dark:opacity-30"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -334,7 +393,7 @@ export default function TourDetailsPage() {
 
             <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400 border border-transparent dark:border-emerald-900/50 text-sm font-medium px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
-              <span>Safar kafolatlangan! Faqat 3 ta joy qoldi.</span>
+              <span>Safar kafolatlangan! Joylar soni chegaralangan.</span>
             </div>
 
             <button 
@@ -362,33 +421,42 @@ export default function TourDetailsPage() {
               </button>
             </div>
             
-            <div className="space-y-3 mb-6">
-              {AVAILABLE_DATES.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedDateRange(item.range);
-                    setIsDateModalOpen(false);
-                  }}
-                  className={`p-3.5 rounded-xl border flex justify-between items-center cursor-pointer transition-all ${
-                    selectedDateRange === item.range 
-                      ? 'border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold' 
-                      : 'border-neutral-200 dark:border-neutral-800 hover:border-emerald-500 dark:hover:border-emerald-500 text-neutral-700 dark:text-neutral-300'
-                  }`}
-                >
-                  <span className="text-sm">{item.range}</span>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                    {item.status}
-                  </span>
+            <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+              {availableDates.length > 0 ? (
+                availableDates.map((item, idx) => {
+                  const dateText = item.date || item.range || item.startDate || `Sana ${idx + 1}`;
+                  return (
+                    <div
+                      key={item.id || idx}
+                      onClick={() => {
+                        setSelectedDateRange(dateText);
+                        setIsDateModalOpen(false);
+                      }}
+                      className={`p-3.5 rounded-xl border flex justify-between items-center cursor-pointer transition-all ${
+                        selectedDateRange === dateText 
+                          ? 'border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold' 
+                          : 'border-neutral-200 dark:border-neutral-800 hover:border-emerald-500 dark:hover:border-emerald-500 text-neutral-700 dark:text-neutral-300'
+                      }`}
+                    >
+                      <span className="text-sm">{dateText}</span>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                        {item.status || "Mavjud"}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-4 text-center text-sm text-neutral-500">
+                  Bo'sh kunlar ko'rsatilmagan. Ixtiyoriy sanani tanlashingiz mumkin.
                 </div>
-              ))}
+              )}
             </div>
 
             <button
               onClick={() => setIsDateModalOpen(false)}
               className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
             >
-              Tayyor
+              Yopish
             </button>
           </div>
         </div>
